@@ -34,7 +34,6 @@ import Prim.Row as Row
 import Record as Record
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
-
 --------------------------------------------------------------------------------
 -- Type-Level Path DSL
 --------------------------------------------------------------------------------
@@ -241,6 +240,7 @@ instance parseParamNumber :: ParseParam Number where
   parseParam s = case Int.fromString s of
     Nothing -> Left $ "Expected a number but got: " <> s
     Just n -> Right (Int.toNumber n) -- Simple version, doesn't handle floats
+
 
 -- | Parse a URL string into a record of typed path parameters
 -- |

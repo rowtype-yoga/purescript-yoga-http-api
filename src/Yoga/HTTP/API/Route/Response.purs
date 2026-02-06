@@ -19,6 +19,7 @@ import Data.Variant (Variant)
 import Data.Variant as Variant
 import Prim.Row (class Cons)
 import Prim.RowList as RL
+import Prim.TypeError (class Fail, Text, Above)
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -69,6 +70,43 @@ instance toResponseRLBodyHeaders ::
 -- { body :: b } (no headers)
 else instance toResponseRLBodyOnly ::
   ToResponseRL (RL.Cons "body" body RL.Nil) () body
+
+-- Invalid record structure: has fields other than "body" and "headers"
+else instance toResponseRLInvalid ::
+  ( Fail
+      ( Above
+          (Text "Invalid response record structure.")
+          ( Above
+              (Text "")
+              ( Above
+                  (Text "Response records must contain ONLY:")
+                  ( Above
+                      (Text "  • body :: YourBodyType              (required)")
+                      ( Above
+                          (Text "  • headers :: Record (...)         (optional)")
+                          ( Above
+                              (Text "")
+                              ( Above
+                                  (Text "Valid examples:")
+                                  ( Above
+                                      (Text "  { body: user }")
+                                      ( Above
+                                          (Text "  { body: user, headers: { \"Location\": \"/users/123\" } }")
+                                          ( Above
+                                              (Text "")
+                                              (Text "Do not include 'status', 'statusCode', or other fields.")
+                                          )
+                                      )
+                                  )
+                              )
+                          )
+                      )
+                  )
+              )
+          )
+      )
+  ) =>
+  ToResponseRL rl headers body
 
 --------------------------------------------------------------------------------
 -- Response Construction Helpers

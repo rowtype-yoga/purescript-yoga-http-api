@@ -9,6 +9,7 @@ import Prelude
 
 import Type.Proxy (Proxy(..))
 import Data.Newtype (class Newtype)
+import Prim.TypeError (class Fail, Text, Beside, Above, Quote)
 
 newtype StatusCode = StatusCode Int
 
@@ -224,6 +225,7 @@ instance StatusCodeMap "notExtended" where
 
 instance StatusCodeMap "networkAuthenticationRequired" where
   statusCodeFor _ = StatusCode 511
+
 
 --------------------------------------------------------------------------------
 -- Helper Functions

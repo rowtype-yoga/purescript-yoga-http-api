@@ -6,6 +6,8 @@ module Yoga.HTTP.API.Route.Response
   , respond
   , respondWith
   , respondNoHeaders
+  , respondStatus
+  , respondStatusWith
   , respondNoBody
   , respondNothing
   , respondNoContent
@@ -22,6 +24,7 @@ import Prim.RowList as RL
 import Prim.TypeError (class Fail, Text, Above)
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
+import Yoga.HTTP.API.Route.StatusCode (class StatusCodeToLabel)
 
 --------------------------------------------------------------------------------
 -- Response Data Type
@@ -156,6 +159,37 @@ respondNoHeaders
   -> Variant r2
 respondNoHeaders body =
   Variant.inj (Proxy :: Proxy label) (Response { headers: {}, body })
+
+-- | Construct a variant response using numeric status code
+-- |
+-- | Example:
+-- |   respondStatus @200 user
+-- |   respondStatus @404 { error: "Not found" }
+respondStatus
+  :: forall @code label body r1 r2
+   . StatusCodeToLabel code label
+  => IsSymbol label
+  => Cons label (Response () body) r1 r2
+  => body
+  -> Variant r2
+respondStatus body =
+  Variant.inj (Proxy :: Proxy label) (Response { headers: {}, body })
+
+-- | Construct a variant response with headers using numeric status code
+-- |
+-- | Example:
+-- |   respondStatusWith @201 { "Location": "/users/123" } user
+respondStatusWith
+  :: forall @code label headers body r1 r2
+   . StatusCodeToLabel code label
+  => IsSymbol label
+  => Cons label (Response headers body) r1 r2
+  => Record headers
+  -> body
+  -> Variant r2
+respondStatusWith headers body =
+  Variant.inj (Proxy :: Proxy label) (Response { headers, body })
+
 
 -- | Construct a variant response with headers but no body
 -- |

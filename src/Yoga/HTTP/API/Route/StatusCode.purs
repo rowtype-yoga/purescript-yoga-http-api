@@ -5,6 +5,7 @@ module Yoga.HTTP.API.Route.StatusCode
   , statusCodeFor
   , statusCodeToString
   , StatusCode(..)
+  , class StatusCodeToLabel
   ) where
 
 import Prelude
@@ -264,3 +265,39 @@ instance StatusCodeMapImpl (Proxy sym) => StatusCodeMap sym where
 -- | Convert StatusCode to String for OpenAPI generation
 statusCodeToString :: StatusCode -> String
 statusCodeToString (StatusCode n) = show n
+
+--------------------------------------------------------------------------------
+-- Status Code to Label Mapping
+--------------------------------------------------------------------------------
+
+-- | Map numeric status codes to their label names
+class StatusCodeToLabel (code :: Int) (label :: Symbol) | code -> label
+
+-- 2xx Success
+instance StatusCodeToLabel 200 "ok"
+instance StatusCodeToLabel 201 "created"
+instance StatusCodeToLabel 202 "accepted"
+instance StatusCodeToLabel 204 "noContent"
+
+-- 3xx Redirection
+instance StatusCodeToLabel 301 "movedPermanently"
+instance StatusCodeToLabel 302 "found"
+instance StatusCodeToLabel 303 "seeOther"
+instance StatusCodeToLabel 304 "notModified"
+instance StatusCodeToLabel 307 "temporaryRedirect"
+instance StatusCodeToLabel 308 "permanentRedirect"
+
+-- 4xx Client Errors
+instance StatusCodeToLabel 400 "badRequest"
+instance StatusCodeToLabel 401 "unauthorized"
+instance StatusCodeToLabel 403 "forbidden"
+instance StatusCodeToLabel 404 "notFound"
+instance StatusCodeToLabel 409 "conflict"
+instance StatusCodeToLabel 422 "unprocessableEntity"
+instance StatusCodeToLabel 429 "tooManyRequests"
+
+-- 5xx Server Errors
+instance StatusCodeToLabel 500 "internalServerError"
+instance StatusCodeToLabel 502 "badGateway"
+instance StatusCodeToLabel 503 "serviceUnavailable"
+

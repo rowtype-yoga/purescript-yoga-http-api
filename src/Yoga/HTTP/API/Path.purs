@@ -6,7 +6,6 @@ module Yoga.HTTP.API.Path
   , PathCons
   , type (/)
   , Param
-  , type (:>)
   , type (:)
   , QueryParams
   , type (:?)
@@ -85,17 +84,16 @@ data PathCons left right
 -- | Sugar for Capture — use with bare Symbols in the path DSL
 -- |
 -- | Example:
--- |   Path ("users" / "id" :> Int / "posts")
+-- |   Path ("users" / "id" : Int / "posts")
 -- |   -- equivalent to: Path (Lit "users" / Capture "id" Int / Lit "posts")
 data Param (name :: Symbol) (ty :: Type)
 
-infixr 8 type Param as :>
 infixr 8 type Param as :
 
 -- | Attach query parameters to a path
 -- |
 -- | Example:
--- |   Path ("users" / "id" :> Int) :? { limit :: Int, offset :: Required Int }
+-- |   Path ("users" / "id" : Int) :? { limit :: Int, offset :: Required Int }
 data QueryParams :: forall k. k -> Type -> Type
 data QueryParams path params
 
@@ -192,7 +190,7 @@ else instance pathPatternSegsParamCons ::
   PathPatternSegs (PathCons (Param name ty) rest) where
   pathPatternSegs _ = "/:" <> reflectSymbol (Proxy :: Proxy name) <> pathPatternSegs (Proxy :: Proxy rest)
 
--- PathCons with bare Symbol on left (from :> sugar)
+-- PathCons with bare Symbol on left (from : sugar)
 else instance pathPatternSegsSymbolCons ::
   ( IsSymbol s
   , PathPatternSegs rest
@@ -204,7 +202,7 @@ else instance pathPatternSegsSymbolCons ::
 else instance pathPatternSegsPath :: PathPatternSegs segs => PathPatternSegs (Path segs) where
   pathPatternSegs _ = pathPatternSegs (Proxy :: Proxy segs)
 
--- Bare Symbol (single segment, from :> sugar)
+-- Bare Symbol (single segment, from : sugar)
 else instance pathPatternSegsSymbol :: IsSymbol s => PathPatternSegs s where
   pathPatternSegs _ = "/" <> reflectSymbol (Proxy :: Proxy s)
 

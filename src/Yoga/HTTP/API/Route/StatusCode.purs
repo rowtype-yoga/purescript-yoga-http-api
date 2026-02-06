@@ -11,7 +11,7 @@ import Prelude
 
 import Type.Proxy (Proxy(..))
 import Data.Newtype (class Newtype)
-import Prim.TypeError (class Fail, Text, Above)
+import Prim.TypeError (class Fail, Text, Above, Quote, Beside)
 
 newtype StatusCode = StatusCode Int
 
@@ -223,14 +223,20 @@ else instance StatusCodeMapImpl (Proxy "networkAuthenticationRequired") where
 else instance
   ( Fail
       ( Above
-          (Text "Unknown status code label. Valid codes:")
+          (Beside (Text "Unknown status code: ") (Quote sym))
           ( Above
-              (Text "  • 2xx Success: ok, created, accepted, noContent, etc.")
+              (Text "")
               ( Above
-                  (Text "  • 3xx Redirect: movedPermanently, found, seeOther, notModified, etc.")
+                  (Text "Valid codes:")
                   ( Above
-                      (Text "  • 4xx Client: badRequest, unauthorized, forbidden, notFound, conflict, unprocessableEntity, etc.")
-                      (Text "  • 5xx Server: internalServerError, badGateway, serviceUnavailable, etc.")
+                      (Text "  • 2xx Success: ok, created, accepted, noContent, etc.")
+                      ( Above
+                          (Text "  • 3xx Redirect: movedPermanently, found, seeOther, notModified, etc.")
+                          ( Above
+                              (Text "  • 4xx Client: badRequest, unauthorized, forbidden, notFound, conflict, unprocessableEntity, etc.")
+                              (Text "  • 5xx Server: internalServerError, badGateway, serviceUnavailable, etc.")
+                          )
+                      )
                   )
               )
           )

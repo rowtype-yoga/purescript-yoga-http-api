@@ -1,4 +1,4 @@
--- EXPECT: StatusCodeMap
+-- EXPECT: Unknown status code
 module Test.CompileFail.InvalidStatusCodeLabel where
 
 import Type.Proxy (Proxy(..))

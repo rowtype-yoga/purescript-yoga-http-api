@@ -1,4 +1,4 @@
--- EXPECT: No type class instance was found
+-- EXPECT: Invalid response record structure
 module Test.CompileFail.InvalidResponseRecordStructure where
 
 import Prelude

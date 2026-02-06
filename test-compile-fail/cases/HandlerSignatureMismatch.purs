@@ -1,0 +1,21 @@
+-- EXPECT: Could not match type
+module Test.CompileFail.HandlerSignatureMismatch where
+
+import Prelude
+import Data.Maybe (Maybe)
+import Data.Variant (Variant)
+import Effect.Aff (Aff)
+import Yoga.HTTP.API.Path (Path, Lit, Capture, type (/), type (:))
+import Yoga.HTTP.API.Route.Encoding (NoBody)
+import Yoga.HTTP.API.Route.Handler (Request)
+import Yoga.HTTP.API.Route.Method (GET)
+import Yoga.HTTP.API.Route.Response (Response, respondNoHeaders)
+import Yoga.HTTP.API.Route.Route (Route)
+import Yoga.HTTP.API.Route.RouteHandler (Handler, mkHandler)
+
+type MyRoute = Route GET (Path (Lit "users" / Capture "id" Int)) (Request {}) (ok :: { body :: String })
+
+-- Handler takes { id :: String } but route has Capture "id" Int
+test :: Handler MyRoute
+test = mkHandler \{ path: { id } } ->
+  pure (respondNoHeaders @"ok" (show (id :: String)))

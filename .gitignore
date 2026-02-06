@@ -1,4 +1,5 @@
 .spago
 output
+output-compile-fail
 node_modules
 .purs-repl

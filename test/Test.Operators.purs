@@ -39,7 +39,11 @@ spec = do
   _ <- APIRecordTest.testOperationIds
   _ <- APIRecordTest.testBuildOpenAPISpec
   _ <- APIRecordTest.testAPIHandlers
-  _ <- BearerAuthTest.testBearerTokenNotInHeaders
+  _ <- BearerAuthTest.testBearerTokenAuth
+  _ <- BearerAuthTest.testBasicAuth
+  _ <- BearerAuthTest.testApiKeyAuth
+  _ <- BearerAuthTest.testDigestAuth
+  _ <- BearerAuthTest.testMultipleAuthTypes
   SchemaComponentTest.testSchemaComponents
 
 main :: ViTest

@@ -66,8 +66,10 @@ module Yoga.HTTP.API.Route.OpenAPI
 
 import Prelude
 
+import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), maybe)
+import Data.String as String
 import Data.String.Regex (replace)
 import Data.String.Regex.Flags (global)
 import Data.String.Regex.Unsafe (unsafeRegex)
@@ -80,7 +82,7 @@ import Prim.RowList (class RowToList, RowList, Cons, Nil)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
-import Yoga.HTTP.API.Route.BearerToken (BearerToken)
+import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, DigestAuth)
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, NoBody)
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasOperationMetadata, operationMetadata)
@@ -187,6 +189,54 @@ else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Example ex Bea
 else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Deprecated BearerToken) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Deprecated BearerToken) tail) headers where
   renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
 
+-- Skip BasicAuth headers (they're handled as security schemes, not regular headers)
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name BasicAuth tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name BasicAuth tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip BasicAuth wrapped in Description
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Description desc BasicAuth) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Description desc BasicAuth) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip BasicAuth wrapped in Example
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Example ex BasicAuth) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Example ex BasicAuth) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip BasicAuth wrapped in Deprecated
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Deprecated BasicAuth) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Deprecated BasicAuth) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip ApiKeyHeader headers (they're handled as security schemes, not regular headers)
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name ApiKeyHeader tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name ApiKeyHeader tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip ApiKeyHeader wrapped in Description
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Description desc ApiKeyHeader) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Description desc ApiKeyHeader) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip ApiKeyHeader wrapped in Example
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Example ex ApiKeyHeader) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Example ex ApiKeyHeader) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip ApiKeyHeader wrapped in Deprecated
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Deprecated ApiKeyHeader) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Deprecated ApiKeyHeader) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip DigestAuth headers (they're handled as security schemes, not regular headers)
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name DigestAuth tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name DigestAuth tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip DigestAuth wrapped in Description
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Description desc DigestAuth) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Description desc DigestAuth) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip DigestAuth wrapped in Example
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Example ex DigestAuth) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Example ex DigestAuth) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip DigestAuth wrapped in Deprecated
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Deprecated DigestAuth) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Deprecated DigestAuth) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
 -- Required header (non-Maybe type)
 else instance
   ( IsSymbol name
@@ -289,6 +339,106 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecate
       bearerAuth = unsafeCoerce $ FObject.singleton "bearerAuth" ([] :: Array String)
     in
       [ bearerAuth ]
+
+-- Case: BasicAuth found
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name BasicAuth tail) where
+  detectSecurityRL _ =
+    let
+      basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
+    in
+      [ basicAuth ]
+
+-- Case: BasicAuth wrapped in Description
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Description desc BasicAuth) tail) where
+  detectSecurityRL _ =
+    let
+      basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
+    in
+      [ basicAuth ]
+
+-- Case: BasicAuth wrapped in Example
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example ex BasicAuth) tail) where
+  detectSecurityRL _ =
+    let
+      basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
+    in
+      [ basicAuth ]
+
+-- Case: BasicAuth wrapped in Deprecated
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecated BasicAuth) tail) where
+  detectSecurityRL _ =
+    let
+      basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
+    in
+      [ basicAuth ]
+
+-- Case: ApiKeyHeader found
+else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name ApiKeyHeader tail) where
+  detectSecurityRL _ =
+    let
+      keyName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
+    in
+      [ apiKeyAuth ]
+
+-- Case: ApiKeyHeader wrapped in Description
+else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name (Description desc ApiKeyHeader) tail) where
+  detectSecurityRL _ =
+    let
+      keyName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
+    in
+      [ apiKeyAuth ]
+
+-- Case: ApiKeyHeader wrapped in Example
+else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name (Example ex ApiKeyHeader) tail) where
+  detectSecurityRL _ =
+    let
+      keyName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
+    in
+      [ apiKeyAuth ]
+
+-- Case: ApiKeyHeader wrapped in Deprecated
+else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name (Deprecated ApiKeyHeader) tail) where
+  detectSecurityRL _ =
+    let
+      keyName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
+    in
+      [ apiKeyAuth ]
+
+-- Case: DigestAuth found
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name DigestAuth tail) where
+  detectSecurityRL _ =
+    let
+      digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
+    in
+      [ digestAuth ]
+
+-- Case: DigestAuth wrapped in Description
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Description desc DigestAuth) tail) where
+  detectSecurityRL _ =
+    let
+      digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
+    in
+      [ digestAuth ]
+
+-- Case: DigestAuth wrapped in Example
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example ex DigestAuth) tail) where
+  detectSecurityRL _ =
+    let
+      digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
+    in
+      [ digestAuth ]
+
+-- Case: DigestAuth wrapped in Deprecated
+else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecated DigestAuth) tail) where
+  detectSecurityRL _ =
+    let
+      digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
+    in
+      [ digestAuth ]
 
 -- Case: Non-security header, recurse
 else instance (DetectSecurityRL tail, HeaderValueType ty) => DetectSecurityRL (RL.Cons name ty tail) where
@@ -1237,32 +1387,60 @@ foreign import data OpenAPISpec :: Type
 instance WriteForeign OpenAPISpec where
   writeImpl = unsafeCoerce
 
--- | Detect if any operations use bearer token authentication
+-- | Detect which security schemes are used across all operations
 -- | and build the securitySchemes component
 buildSecuritySchemes :: Array OperationEntry -> FObject.Object Foreign
 buildSecuritySchemes ops =
   let
-    hasSecurity = ops # foldl checkOp false
+    securityKeys = ops # foldl collectSecurityKeys []
       where
-      checkOp acc entry =
+      collectSecurityKeys acc entry =
         let
           opObj = unsafeCoerce (unsafeParseJSON entry.operation) :: FObject.Object Foreign
           securityField = FObject.lookup "security" opObj
         in
-          acc || case securityField of
-            Nothing -> false
-            Just _ -> true
-  in
-    if hasSecurity then
-      FObject.singleton "bearerAuth"
-        ( unsafeCoerce
+          case securityField of
+            Nothing -> acc
+            Just secArray ->
+              let
+                secList = unsafeCoerce secArray :: Array (FObject.Object Foreign)
+                keys = secList >>= FObject.keys
+              in
+                acc <> keys
+
+    uniqueKeys = Array.nub securityKeys
+    schemes = uniqueKeys <#> \key ->
+      let
+        scheme = case key of
+          "bearerAuth" -> Just $ Tuple key $ unsafeCoerce
             { type: "http"
             , scheme: "bearer"
             , bearerFormat: "JWT"
             }
-        )
-    else
-      FObject.empty
+          "basicAuth" -> Just $ Tuple key $ unsafeCoerce
+            { type: "http"
+            , scheme: "basic"
+            }
+          "digestAuth" -> Just $ Tuple key $ unsafeCoerce
+            { type: "http"
+            , scheme: "digest"
+            }
+          _ ->
+            -- API Key (header names ending with "ApiKey")
+            if String.take (String.length key - 6) key /= "" && String.drop (String.length key - 6) key == "ApiKey" then
+              let
+                headerName = String.take (String.length key - 6) key
+              in
+                Just $ Tuple key $ unsafeCoerce
+                  { type: "apiKey"
+                  , in: "header"
+                  , name: headerName
+                  }
+            else Nothing
+      in
+        scheme
+  in
+    FObject.fromFoldable $ Array.catMaybes schemes
 
 -- | Type for OpenAPI server object
 type ServerObject =

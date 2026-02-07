@@ -5,3 +5,4 @@ output-test
 node_modules
 .purs-repl
 .psc-ide-port
+.psci_modules

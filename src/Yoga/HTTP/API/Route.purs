@@ -5,6 +5,7 @@ module Yoga.HTTP.API.Route
   , module Yoga.HTTP.API.Route.StatusCode
   , module Yoga.HTTP.API.Route.HeaderError
   , module Yoga.HTTP.API.Route.HeaderValue
+  , module Yoga.HTTP.API.Route.Auth
   , module Yoga.HTTP.API.Route.BearerToken
   , module Yoga.HTTP.API.Route.Response
   , module Yoga.HTTP.API.Route.Handler
@@ -15,6 +16,7 @@ module Yoga.HTTP.API.Route
   ) where
 
 import Yoga.HTTP.API.Path (Path, Root, Lit, Capture, PathCons, Param, QueryParams, Required, type (/), type (:), type (:?), class PathPattern, pathPattern, class ParseParam, parseParam, class ParsePath, parsePath)
+import Yoga.HTTP.API.Route.Auth (BearerToken(..), BasicAuth(..), ApiKeyHeader(..), DigestAuth(..))
 import Yoga.HTTP.API.Route.BearerToken (BearerToken(..))
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, NoBody)
 import Yoga.HTTP.API.Route.Handler (HandlerFn, Request)

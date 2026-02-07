@@ -14,6 +14,7 @@ import Test.CookieAuthTest as CookieAuthTest
 import Test.OpenAPIInfoTest as OpenAPIInfoTest
 import Test.ContentTypeTest as ContentTypeTest
 import Test.ExamplesTest as ExamplesTest
+import Test.ComprehensiveExample as ComprehensiveExample
 
 spec :: Effect ViTest
 spec = do
@@ -65,6 +66,7 @@ spec = do
   _ <- ExamplesTest.testExamplesBackwardCompatibility
   _ <- ExamplesTest.testExamplesInQueryParams
   _ <- ExamplesTest.testComplexExampleObject
+  _ <- ComprehensiveExample.testComprehensiveExample
   SchemaComponentTest.testSchemaComponents
 
 main :: ViTest

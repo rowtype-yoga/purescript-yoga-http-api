@@ -37,6 +37,8 @@ module Yoga.HTTP.API.Route.OpenAPI
   , toOpenAPI
   , class CollectOperations
   , collectOperations
+  , class CollectNamedOperationsRL
+  , collectNamedOperationsRL
   , OperationEntry
   , buildOpenAPISpec
   , buildOpenAPISpec'
@@ -54,7 +56,6 @@ import Data.String.Regex.Flags (global)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
-import Data.Tuple.Nested (type (/\), (/\))
 import Foreign (Foreign)
 import Foreign.Object as FObject
 import Prim.Row as Row
@@ -873,16 +874,41 @@ type OperationEntry =
   }
 
 -- | Collect OpenAPI operations from a type-level structure of routes.
--- | Use Tuple (/\) to combine multiple routes:
--- |   CollectOperations (RouteA /\ RouteB /\ RouteC)
+-- | Use a Record to combine multiple named routes:
+-- |   CollectOperations { getUser :: RouteA, createUser :: RouteB }
 class CollectOperations (routes :: Type) where
   collectOperations :: Proxy routes -> Array OperationEntry
 
--- Tuple: recurse into both sides
-instance (CollectOperations a, CollectOperations b) => CollectOperations (Tuple a b) where
-  collectOperations _ = collectOperations (Proxy :: Proxy a) <> collectOperations (Proxy :: Proxy b)
-
 -- Note: Route instance is defined in Route.purs to avoid import cycles
+
+--------------------------------------------------------------------------------
+-- CollectNamedOperationsRL: Walk a record RowList and inject operationId
+--------------------------------------------------------------------------------
+
+class CollectNamedOperationsRL (rl :: RowList Type) where
+  collectNamedOperationsRL :: Proxy rl -> Array OperationEntry
+
+instance CollectNamedOperationsRL Nil where
+  collectNamedOperationsRL _ = []
+
+instance
+  ( IsSymbol label
+  , CollectOperations routeType
+  , CollectNamedOperationsRL tail
+  ) =>
+  CollectNamedOperationsRL (Cons label routeType tail) where
+  collectNamedOperationsRL _ = do
+    let
+      name = reflectSymbol (Proxy :: Proxy label)
+      entries = collectOperations (Proxy :: Proxy routeType)
+      namedEntries = entries <#> \entry ->
+        entry { operation = setOperationId name entry.operation }
+      rest = collectNamedOperationsRL (Proxy :: Proxy tail)
+    namedEntries <> rest
+
+-- Record instance: iterate record fields via RowList
+instance (RowToList row rl, CollectNamedOperationsRL rl) => CollectOperations (Record row) where
+  collectOperations _ = collectNamedOperationsRL (Proxy :: Proxy rl)
 
 --------------------------------------------------------------------------------
 -- buildOpenAPISpec: Assemble a complete OpenAPI 3.0 document
@@ -931,11 +957,11 @@ type ServerObject =
 -- |
 -- | Examples:
 -- |   -- Basic usage:
--- |   buildOpenAPISpec @(HealthRoute /\ UserRoute)
+-- |   buildOpenAPISpec @MyAPI
 -- |     { title: "My API", version: "1.0.0" }
 -- |
 -- |   -- With servers:
--- |   buildOpenAPISpec' @(HealthRoute /\ UserRoute)
+-- |   buildOpenAPISpec' @MyAPI
 -- |     { title: "My API"
 -- |     , version: "1.0.0"
 -- |     , servers: Just
@@ -1003,3 +1029,4 @@ groupByPath = foldl insertOp FObject.empty
 -- FFI helpers
 foreign import unsafeParseJSON :: String -> Foreign
 foreign import stripKeys :: Array String -> Foreign -> Foreign
+foreign import setOperationId :: String -> String -> String

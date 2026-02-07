@@ -7,6 +7,7 @@ import OperatorTest.Spec as OperatorTest
 import ParserTest.Spec as ParserTest
 import VariantResponseTest.Spec as VariantResponseTest
 import MetadataValidationTest.Spec as MetadataValidationTest
+import APIRecordTest.Spec as APIRecordTest
 
 spec :: Effect ViTest
 spec = do
@@ -31,7 +32,11 @@ spec = do
   _ <- MetadataValidationTest.testMaxLengthValidation
   _ <- MetadataValidationTest.testMinimumValidation
   _ <- MetadataValidationTest.testMaximumValidation
-  MetadataValidationTest.testComposedValidation
+  _ <- MetadataValidationTest.testComposedValidation
+  _ <- APIRecordTest.testCollectOperations
+  _ <- APIRecordTest.testOperationIds
+  _ <- APIRecordTest.testBuildOpenAPISpec
+  APIRecordTest.testAPIHandlers
 
 main :: ViTest
 main = viTest spec

@@ -12,6 +12,131 @@ module Yoga.HTTP.API.Route.Response
   , respondNothing
   , respondNoContent
   , respondNotModified
+  -- Status code helpers
+, continue
+, continueWith
+, switchingProtocols
+, switchingProtocolsWith
+, processing
+, processingWith
+, earlyHints
+, earlyHintsWith
+, ok
+, okWith
+, created
+, createdWith
+, accepted
+, acceptedWith
+, nonAuthoritativeInformation
+, nonAuthoritativeInformationWith
+, noContent
+, noContentWith
+, resetContent
+, resetContentWith
+, partialContent
+, partialContentWith
+, multiStatus
+, multiStatusWith
+, alreadyReported
+, alreadyReportedWith
+, imUsed
+, imUsedWith
+, multipleChoices
+, multipleChoicesWith
+, movedPermanently
+, movedPermanentlyWith
+, found
+, foundWith
+, seeOther
+, seeOtherWith
+, notModified
+, notModifiedWith
+, useProxy
+, useProxyWith
+, temporaryRedirect
+, temporaryRedirectWith
+, permanentRedirect
+, permanentRedirectWith
+, badRequest
+, badRequestWith
+, unauthorized
+, unauthorizedWith
+, paymentRequired
+, paymentRequiredWith
+, forbidden
+, forbiddenWith
+, notFound
+, notFoundWith
+, methodNotAllowed
+, methodNotAllowedWith
+, notAcceptable
+, notAcceptableWith
+, proxyAuthenticationRequired
+, proxyAuthenticationRequiredWith
+, requestTimeout
+, requestTimeoutWith
+, conflict
+, conflictWith
+, gone
+, goneWith
+, lengthRequired
+, lengthRequiredWith
+, preconditionFailed
+, preconditionFailedWith
+, payloadTooLarge
+, payloadTooLargeWith
+, uriTooLong
+, uriTooLongWith
+, unsupportedMediaType
+, unsupportedMediaTypeWith
+, rangeNotSatisfiable
+, rangeNotSatisfiableWith
+, expectationFailed
+, expectationFailedWith
+, imATeapot
+, imATeapotWith
+, misdirectedRequest
+, misdirectedRequestWith
+, unprocessableEntity
+, unprocessableEntityWith
+, locked
+, lockedWith
+, failedDependency
+, failedDependencyWith
+, tooEarly
+, tooEarlyWith
+, upgradeRequired
+, upgradeRequiredWith
+, preconditionRequired
+, preconditionRequiredWith
+, tooManyRequests
+, tooManyRequestsWith
+, requestHeaderFieldsTooLarge
+, requestHeaderFieldsTooLargeWith
+, unavailableForLegalReasons
+, unavailableForLegalReasonsWith
+, internalServerError
+, internalServerErrorWith
+, notImplemented
+, notImplementedWith
+, badGateway
+, badGatewayWith
+, serviceUnavailable
+, serviceUnavailableWith
+, gatewayTimeout
+, gatewayTimeoutWith
+, httpVersionNotSupported
+, httpVersionNotSupportedWith
+, variantAlsoNegotiates
+, variantAlsoNegotiatesWith
+, insufficientStorage
+, insufficientStorageWith
+, loopDetected
+, loopDetectedWith
+, notExtended
+, notExtendedWith
+, networkAuthenticationRequired
+, networkAuthenticationRequiredWith
   , module Data.Variant
   ) where
 
@@ -240,3 +365,256 @@ respondNotModified
   => Variant r2
 respondNotModified =
   unsafeCoerce (Variant.inj (Proxy :: Proxy "notModified") (Response { headers: {}, body: unit }))
+
+--------------------------------------------------------------------------------
+-- Status Code Helper Functions
+--------------------------------------------------------------------------------
+
+continue = respondNoHeaders @"continue"
+
+continueWith = respondWith (Proxy :: Proxy "continue")
+
+switchingProtocols = respondNoHeaders @"switchingProtocols"
+
+switchingProtocolsWith = respondWith (Proxy :: Proxy "switchingProtocols")
+
+processing = respondNoHeaders @"processing"
+
+processingWith = respondWith (Proxy :: Proxy "processing")
+
+earlyHints = respondNoHeaders @"earlyHints"
+
+earlyHintsWith = respondWith (Proxy :: Proxy "earlyHints")
+
+ok = respondNoHeaders @"ok"
+
+okWith = respondWith (Proxy :: Proxy "ok")
+
+created = respondNoHeaders @"created"
+
+createdWith = respondWith (Proxy :: Proxy "created")
+
+accepted = respondNoHeaders @"accepted"
+
+acceptedWith = respondWith (Proxy :: Proxy "accepted")
+
+nonAuthoritativeInformation = respondNoHeaders @"nonAuthoritativeInformation"
+
+nonAuthoritativeInformationWith = respondWith (Proxy :: Proxy "nonAuthoritativeInformation")
+
+noContent = respondNoHeaders @"noContent"
+
+noContentWith = respondWith (Proxy :: Proxy "noContent")
+
+resetContent = respondNoHeaders @"resetContent"
+
+resetContentWith = respondWith (Proxy :: Proxy "resetContent")
+
+partialContent = respondNoHeaders @"partialContent"
+
+partialContentWith = respondWith (Proxy :: Proxy "partialContent")
+
+multiStatus = respondNoHeaders @"multiStatus"
+
+multiStatusWith = respondWith (Proxy :: Proxy "multiStatus")
+
+alreadyReported = respondNoHeaders @"alreadyReported"
+
+alreadyReportedWith = respondWith (Proxy :: Proxy "alreadyReported")
+
+imUsed = respondNoHeaders @"imUsed"
+
+imUsedWith = respondWith (Proxy :: Proxy "imUsed")
+
+multipleChoices = respondNoHeaders @"multipleChoices"
+
+multipleChoicesWith = respondWith (Proxy :: Proxy "multipleChoices")
+
+movedPermanently = respondNoHeaders @"movedPermanently"
+
+movedPermanentlyWith = respondWith (Proxy :: Proxy "movedPermanently")
+
+found = respondNoHeaders @"found"
+
+foundWith = respondWith (Proxy :: Proxy "found")
+
+seeOther = respondNoHeaders @"seeOther"
+
+seeOtherWith = respondWith (Proxy :: Proxy "seeOther")
+
+notModified = respondNoHeaders @"notModified"
+
+notModifiedWith = respondWith (Proxy :: Proxy "notModified")
+
+useProxy = respondNoHeaders @"useProxy"
+
+useProxyWith = respondWith (Proxy :: Proxy "useProxy")
+
+temporaryRedirect = respondNoHeaders @"temporaryRedirect"
+
+temporaryRedirectWith = respondWith (Proxy :: Proxy "temporaryRedirect")
+
+permanentRedirect = respondNoHeaders @"permanentRedirect"
+
+permanentRedirectWith = respondWith (Proxy :: Proxy "permanentRedirect")
+
+badRequest = respondNoHeaders @"badRequest"
+
+badRequestWith = respondWith (Proxy :: Proxy "badRequest")
+
+unauthorized = respondNoHeaders @"unauthorized"
+
+unauthorizedWith = respondWith (Proxy :: Proxy "unauthorized")
+
+paymentRequired = respondNoHeaders @"paymentRequired"
+
+paymentRequiredWith = respondWith (Proxy :: Proxy "paymentRequired")
+
+forbidden = respondNoHeaders @"forbidden"
+
+forbiddenWith = respondWith (Proxy :: Proxy "forbidden")
+
+notFound = respondNoHeaders @"notFound"
+
+notFoundWith = respondWith (Proxy :: Proxy "notFound")
+
+methodNotAllowed = respondNoHeaders @"methodNotAllowed"
+
+methodNotAllowedWith = respondWith (Proxy :: Proxy "methodNotAllowed")
+
+notAcceptable = respondNoHeaders @"notAcceptable"
+
+notAcceptableWith = respondWith (Proxy :: Proxy "notAcceptable")
+
+proxyAuthenticationRequired = respondNoHeaders @"proxyAuthenticationRequired"
+
+proxyAuthenticationRequiredWith = respondWith (Proxy :: Proxy "proxyAuthenticationRequired")
+
+requestTimeout = respondNoHeaders @"requestTimeout"
+
+requestTimeoutWith = respondWith (Proxy :: Proxy "requestTimeout")
+
+conflict = respondNoHeaders @"conflict"
+
+conflictWith = respondWith (Proxy :: Proxy "conflict")
+
+gone = respondNoHeaders @"gone"
+
+goneWith = respondWith (Proxy :: Proxy "gone")
+
+lengthRequired = respondNoHeaders @"lengthRequired"
+
+lengthRequiredWith = respondWith (Proxy :: Proxy "lengthRequired")
+
+preconditionFailed = respondNoHeaders @"preconditionFailed"
+
+preconditionFailedWith = respondWith (Proxy :: Proxy "preconditionFailed")
+
+payloadTooLarge = respondNoHeaders @"payloadTooLarge"
+
+payloadTooLargeWith = respondWith (Proxy :: Proxy "payloadTooLarge")
+
+uriTooLong = respondNoHeaders @"uriTooLong"
+
+uriTooLongWith = respondWith (Proxy :: Proxy "uriTooLong")
+
+unsupportedMediaType = respondNoHeaders @"unsupportedMediaType"
+
+unsupportedMediaTypeWith = respondWith (Proxy :: Proxy "unsupportedMediaType")
+
+rangeNotSatisfiable = respondNoHeaders @"rangeNotSatisfiable"
+
+rangeNotSatisfiableWith = respondWith (Proxy :: Proxy "rangeNotSatisfiable")
+
+expectationFailed = respondNoHeaders @"expectationFailed"
+
+expectationFailedWith = respondWith (Proxy :: Proxy "expectationFailed")
+
+imATeapot = respondNoHeaders @"imATeapot"
+
+imATeapotWith = respondWith (Proxy :: Proxy "imATeapot")
+
+misdirectedRequest = respondNoHeaders @"misdirectedRequest"
+
+misdirectedRequestWith = respondWith (Proxy :: Proxy "misdirectedRequest")
+
+unprocessableEntity = respondNoHeaders @"unprocessableEntity"
+
+unprocessableEntityWith = respondWith (Proxy :: Proxy "unprocessableEntity")
+
+locked = respondNoHeaders @"locked"
+
+lockedWith = respondWith (Proxy :: Proxy "locked")
+
+failedDependency = respondNoHeaders @"failedDependency"
+
+failedDependencyWith = respondWith (Proxy :: Proxy "failedDependency")
+
+tooEarly = respondNoHeaders @"tooEarly"
+
+tooEarlyWith = respondWith (Proxy :: Proxy "tooEarly")
+
+upgradeRequired = respondNoHeaders @"upgradeRequired"
+
+upgradeRequiredWith = respondWith (Proxy :: Proxy "upgradeRequired")
+
+preconditionRequired = respondNoHeaders @"preconditionRequired"
+
+preconditionRequiredWith = respondWith (Proxy :: Proxy "preconditionRequired")
+
+tooManyRequests = respondNoHeaders @"tooManyRequests"
+
+tooManyRequestsWith = respondWith (Proxy :: Proxy "tooManyRequests")
+
+requestHeaderFieldsTooLarge = respondNoHeaders @"requestHeaderFieldsTooLarge"
+
+requestHeaderFieldsTooLargeWith = respondWith (Proxy :: Proxy "requestHeaderFieldsTooLarge")
+
+unavailableForLegalReasons = respondNoHeaders @"unavailableForLegalReasons"
+
+unavailableForLegalReasonsWith = respondWith (Proxy :: Proxy "unavailableForLegalReasons")
+
+internalServerError = respondNoHeaders @"internalServerError"
+
+internalServerErrorWith = respondWith (Proxy :: Proxy "internalServerError")
+
+notImplemented = respondNoHeaders @"notImplemented"
+
+notImplementedWith = respondWith (Proxy :: Proxy "notImplemented")
+
+badGateway = respondNoHeaders @"badGateway"
+
+badGatewayWith = respondWith (Proxy :: Proxy "badGateway")
+
+serviceUnavailable = respondNoHeaders @"serviceUnavailable"
+
+serviceUnavailableWith = respondWith (Proxy :: Proxy "serviceUnavailable")
+
+gatewayTimeout = respondNoHeaders @"gatewayTimeout"
+
+gatewayTimeoutWith = respondWith (Proxy :: Proxy "gatewayTimeout")
+
+httpVersionNotSupported = respondNoHeaders @"httpVersionNotSupported"
+
+httpVersionNotSupportedWith = respondWith (Proxy :: Proxy "httpVersionNotSupported")
+
+variantAlsoNegotiates = respondNoHeaders @"variantAlsoNegotiates"
+
+variantAlsoNegotiatesWith = respondWith (Proxy :: Proxy "variantAlsoNegotiates")
+
+insufficientStorage = respondNoHeaders @"insufficientStorage"
+
+insufficientStorageWith = respondWith (Proxy :: Proxy "insufficientStorage")
+
+loopDetected = respondNoHeaders @"loopDetected"
+
+loopDetectedWith = respondWith (Proxy :: Proxy "loopDetected")
+
+notExtended = respondNoHeaders @"notExtended"
+
+notExtendedWith = respondWith (Proxy :: Proxy "notExtended")
+
+networkAuthenticationRequired = respondNoHeaders @"networkAuthenticationRequired"
+
+networkAuthenticationRequiredWith = respondWith (Proxy :: Proxy "networkAuthenticationRequired")
+

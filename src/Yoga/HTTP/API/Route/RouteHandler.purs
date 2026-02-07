@@ -3,9 +3,14 @@ module Yoga.HTTP.API.Route.RouteHandler
   , class RouteHandler
   , mkHandler
   , runHandler
+  , class APIHandlers
+  , apiHandlers
+  , class ApiRecord
   ) where
 
 import Prim.Row as Row
+import Prim.RowList as RL
+import Prim.RowList (class RowToList)
 import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Route.Handler
   ( HandlerFn
@@ -66,3 +71,31 @@ runHandler
   => Handler route
   -> HandlerFn pathParams queryParams reqHeaders body respVariant
 runHandler = unsafeCoerce
+
+--------------------------------------------------------------------------------
+-- APIHandlers: Map an API record row to a handler record row
+--------------------------------------------------------------------------------
+
+class APIHandlers (rl :: RL.RowList Type) (handlerRow :: Row Type) | rl -> handlerRow
+
+instance APIHandlers RL.Nil ()
+
+instance
+  ( APIHandlers tail tailRow
+  , Row.Cons label (Handler (Route method segments request resp)) tailRow handlerRow
+  , Row.Lacks label tailRow
+  ) =>
+  APIHandlers (RL.Cons label (Route method segments request resp) tail) handlerRow
+
+class ApiRecord (api :: Type) (row :: Row Type) | api -> row
+
+instance ApiRecord (Record row) row
+
+apiHandlers
+  :: forall @api apiRow rl handlerRow
+   . ApiRecord api apiRow
+  => RowToList apiRow rl
+  => APIHandlers rl handlerRow
+  => Record handlerRow
+  -> Record handlerRow
+apiHandlers handlers = handlers

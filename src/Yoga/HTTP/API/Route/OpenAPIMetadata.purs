@@ -57,7 +57,7 @@ import Data.String.Regex as Regex
 import Data.String.Regex.Flags (noFlags)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Foreign (Foreign)
-import Prim.TypeError (class Warn, Text)
+
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Path (class ParseParam, parseParam)
@@ -611,7 +611,7 @@ class HasOperationMetadata :: Type -> Constraint
 class HasOperationMetadata route where
   operationMetadata :: Proxy route -> OperationMetadata
 
-instance (Warn (Text "Using default operation metadata")) => HasOperationMetadata route where
+instance HasOperationMetadata route where
   operationMetadata _ =
     { summary: Nothing
     , description: Nothing

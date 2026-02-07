@@ -7,3 +7,9 @@ export const stripKeys = (keys) => (obj) => {
   }
   return result;
 };
+
+export const setOperationId = (name) => (jsonStr) => {
+  const obj = JSON.parse(jsonStr);
+  obj.operationId = name;
+  return JSON.stringify(obj);
+};

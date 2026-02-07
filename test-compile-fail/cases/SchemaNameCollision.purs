@@ -1,6 +1,7 @@
 -- EXPECT: Could not match type
 module Test.CompileFail.SchemaNameCollision where
 
+import Data.Maybe (Maybe(..))
 import Yoga.HTTP.API.Path (Path, Lit)
 import Yoga.HTTP.API.Route.Encoding (JSON)
 import Yoga.HTTP.API.Route.Handler (Request)
@@ -18,4 +19,4 @@ type CollisionAPI =
   }
 
 spec :: OpenAPISpec
-spec = buildOpenAPISpec @CollisionAPI { title: "Test", version: "1.0.0" }
+spec = buildOpenAPISpec @CollisionAPI { title: "Test", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }

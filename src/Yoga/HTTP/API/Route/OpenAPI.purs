@@ -11,6 +11,12 @@ module Yoga.HTTP.API.Route.OpenAPI
   , renderQueryParamsSchema
   , class RenderQueryParamsSchemaRL
   , renderQueryParamsSchemaRL
+  , class RenderCookieParamsSchema
+  , renderCookieParamsSchema
+  , class RenderCookieParamsSchemaRL
+  , renderCookieParamsSchemaRL
+  , class GetContentType
+  , getContentType
   , class RenderRequestBodySchema
   , renderRequestBodySchema
   , class RenderResponseHeadersSchema
@@ -32,6 +38,10 @@ module Yoga.HTTP.API.Route.OpenAPI
   , detectSecurity
   , class DetectSecurityRL
   , detectSecurityRL
+  , class DetectCookieSecurity
+  , detectCookieSecurity
+  , class DetectCookieSecurityRL
+  , detectCookieSecurityRL
   , class ToOpenAPI
   , toOpenAPIImpl
   , toOpenAPI
@@ -62,6 +72,8 @@ module Yoga.HTTP.API.Route.OpenAPI
   , class CollectRouteSchemaNameRL
   , class ValidateNoDuplicatesRL
   , class ValidateSchemaNames
+  -- , class RenderCallbacks
+  -- , renderCallbacks
   ) where
 
 import Prelude
@@ -82,10 +94,11 @@ import Prim.RowList (class RowToList, RowList, Cons, Nil)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
-import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, DigestAuth)
-import Yoga.HTTP.API.Route.Encoding (JSON, FormData, NoBody)
+import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, ApiKeyCookie, DigestAuth)
+import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, XML, CustomContentType, NoBody)
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
-import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasOperationMetadata, operationMetadata)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, Callback, Examples, Link, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasExamples, examples, class HasOperationMetadata, operationMetadata, class HasLinks, links)
+import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.HTTP.API.Route.Response (class ToResponse)
 import Yoga.HTTP.API.Route.StatusCode (class StatusCodeMap, statusCodeFor, statusCodeToString)
 import Yoga.JSON (class WriteForeign, writeImpl)
@@ -263,6 +276,7 @@ else instance
   , HasDefault ty
   , HasDeprecated ty
   , HasEnum ty
+  , HasExamples ty
   , RenderHeadersSchemaRL tail tailRow
   , Row.Cons name ty tailRow headers
   , Row.Lacks name tailRow
@@ -293,7 +307,7 @@ else instance
         , schema
         , description: description p
         , deprecated: if deprecated p then Just true else Nothing
-        , examples: Nothing
+        , examples: examples p
 
         }
       rest = renderHeadersSchemaRL (Proxy :: Proxy tail)
@@ -457,6 +471,66 @@ else instance (DetectSecurityRL tail, HeaderValueType ty) => DetectSecurityRL (R
   detectSecurityRL _ = detectSecurityRL (Proxy :: Proxy tail)
 
 --------------------------------------------------------------------------------
+-- Security Detection for Cookies
+--------------------------------------------------------------------------------
+
+-- | Detect security requirements in request cookies
+-- | Returns an array of security requirement objects (e.g., [{ sessionIdCookie: [] }])
+class DetectCookieSecurity (cookies :: Row Type) where
+  detectCookieSecurity :: Proxy cookies -> Array Foreign
+
+instance (RowToList cookies rl, DetectCookieSecurityRL rl) => DetectCookieSecurity cookies where
+  detectCookieSecurity _ = detectCookieSecurityRL (Proxy :: Proxy rl)
+
+-- | Helper class using RowList to find security-related cookies
+class DetectCookieSecurityRL (rl :: RowList Type) where
+  detectCookieSecurityRL :: Proxy rl -> Array Foreign
+
+-- Base case: no cookies = no security
+instance DetectCookieSecurityRL RL.Nil where
+  detectCookieSecurityRL _ = []
+
+-- Case: ApiKeyCookie found
+instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL (RL.Cons name ApiKeyCookie tail) where
+  detectCookieSecurityRL _ =
+    let
+      cookieName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
+    in
+      [ apiKeyCookie ]
+
+-- Case: ApiKeyCookie wrapped in Description
+else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL (RL.Cons name (Description desc ApiKeyCookie) tail) where
+  detectCookieSecurityRL _ =
+    let
+      cookieName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
+    in
+      [ apiKeyCookie ]
+
+-- Case: ApiKeyCookie wrapped in Example
+else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL (RL.Cons name (Example ex ApiKeyCookie) tail) where
+  detectCookieSecurityRL _ =
+    let
+      cookieName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
+    in
+      [ apiKeyCookie ]
+
+-- Case: ApiKeyCookie wrapped in Deprecated
+else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL (RL.Cons name (Deprecated ApiKeyCookie) tail) where
+  detectCookieSecurityRL _ =
+    let
+      cookieName = reflectSymbol (Proxy :: Proxy name)
+      apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
+    in
+      [ apiKeyCookie ]
+
+-- Case: Non-security cookie, recurse
+else instance (DetectCookieSecurityRL tail, HeaderValueType ty) => DetectCookieSecurityRL (RL.Cons name ty tail) where
+  detectCookieSecurityRL _ = detectCookieSecurityRL (Proxy :: Proxy tail)
+
+--------------------------------------------------------------------------------
 -- Path Parameters Schema Generation
 --------------------------------------------------------------------------------
 
@@ -491,6 +565,7 @@ instance
   , HasDefault ty
   , HasDeprecated ty
   , HasEnum ty
+  , HasExamples ty
   , RenderPathParamsSchemaRL tail tailRow
   , Row.Cons name ty tailRow params
   , Row.Lacks name tailRow
@@ -521,7 +596,7 @@ instance
         , schema
         , description: description p
         , deprecated: if deprecated p then Just true else Nothing
-        , examples: Nothing
+        , examples: examples p
 
         }
       rest = renderPathParamsSchemaRL (Proxy :: Proxy tail)
@@ -563,6 +638,7 @@ instance
   , HasDefault ty
   , HasDeprecated ty
   , HasEnum ty
+  , HasExamples ty
   , RenderQueryParamsSchemaRL tail tailRow
   , Row.Cons name ty tailRow params
   , Row.Lacks name tailRow
@@ -593,10 +669,99 @@ instance
         , schema
         , description: description p
         , deprecated: if deprecated p then Just true else Nothing
-        , examples: Nothing
+        , examples: examples p
 
         }
       rest = renderQueryParamsSchemaRL (Proxy :: Proxy tail)
+    in
+      [ param ] <> rest
+
+--------------------------------------------------------------------------------
+-- Cookie Parameters Schema Generation
+--------------------------------------------------------------------------------
+
+-- | Render cookie parameters row as OpenAPI parameter array
+class RenderCookieParamsSchema (params :: Row Type) where
+  renderCookieParamsSchema :: Proxy params -> Array Foreign
+
+instance (RowToList params rl, RenderCookieParamsSchemaRL rl params) => RenderCookieParamsSchema params where
+  renderCookieParamsSchema _ = renderCookieParamsSchemaRL (Proxy :: Proxy rl)
+
+-- | Helper class using RowList
+class RenderCookieParamsSchemaRL (rl :: RowList Type) (params :: Row Type) | rl -> params where
+  renderCookieParamsSchemaRL :: Proxy rl -> Array Foreign
+
+instance RenderCookieParamsSchemaRL RL.Nil () where
+  renderCookieParamsSchemaRL _ = []
+
+-- Skip ApiKeyCookie cookies (they're handled as security schemes, not regular cookies)
+instance (RenderCookieParamsSchemaRL tail tailRow, Row.Cons name ApiKeyCookie tailRow params, Row.Lacks name tailRow) => RenderCookieParamsSchemaRL (RL.Cons name ApiKeyCookie tail) params where
+  renderCookieParamsSchemaRL _ = renderCookieParamsSchemaRL (Proxy :: Proxy tail)
+
+-- Skip ApiKeyCookie wrapped in Description
+else instance (RenderCookieParamsSchemaRL tail tailRow, Row.Cons name (Description desc ApiKeyCookie) tailRow params, Row.Lacks name tailRow) => RenderCookieParamsSchemaRL (RL.Cons name (Description desc ApiKeyCookie) tail) params where
+  renderCookieParamsSchemaRL _ = renderCookieParamsSchemaRL (Proxy :: Proxy tail)
+
+-- Skip ApiKeyCookie wrapped in Example
+else instance (RenderCookieParamsSchemaRL tail tailRow, Row.Cons name (Example ex ApiKeyCookie) tailRow params, Row.Lacks name tailRow) => RenderCookieParamsSchemaRL (RL.Cons name (Example ex ApiKeyCookie) tail) params where
+  renderCookieParamsSchemaRL _ = renderCookieParamsSchemaRL (Proxy :: Proxy tail)
+
+-- Skip ApiKeyCookie wrapped in Deprecated
+else instance (RenderCookieParamsSchemaRL tail tailRow, Row.Cons name (Deprecated ApiKeyCookie) tailRow params, Row.Lacks name tailRow) => RenderCookieParamsSchemaRL (RL.Cons name (Deprecated ApiKeyCookie) tail) params where
+  renderCookieParamsSchemaRL _ = renderCookieParamsSchemaRL (Proxy :: Proxy tail)
+
+-- Cookie parameter instance
+else instance
+  ( IsSymbol name
+  , HeaderValueType ty
+  , HasDescription ty
+  , HasExample ty
+  , HasFormat ty
+  , HasMinimum ty
+  , HasMaximum ty
+  , HasPattern ty
+  , HasMinLength ty
+  , HasMaxLength ty
+  , HasTitle ty
+  , HasNullable ty
+  , HasDefault ty
+  , HasDeprecated ty
+  , HasEnum ty
+  , HasExamples ty
+  , RenderCookieParamsSchemaRL tail tailRow
+  , Row.Cons name ty tailRow params
+  , Row.Lacks name tailRow
+  ) =>
+  RenderCookieParamsSchemaRL (RL.Cons name ty tail) params where
+  renderCookieParamsSchemaRL _ =
+    let
+      p = Proxy :: Proxy ty
+      schema = buildSchema
+        { type: headerValueType p
+        , format: format p
+        , example: example p
+        , examples: Nothing
+        , minimum: minimum p
+        , maximum: maximum p
+        , pattern: pattern p
+        , minLength: minLength p
+        , maxLength: maxLength p
+        , title: title p
+        , nullable: nullable p
+        , default: default p
+        , enum: enum p
+        }
+      param = buildParameter
+        { name: reflectSymbol (Proxy :: Proxy name)
+        , in: "cookie"
+        , required: false
+        , schema
+        , description: description p
+        , deprecated: if deprecated p then Just true else Nothing
+        , examples: examples p
+
+        }
+      rest = renderCookieParamsSchemaRL (Proxy :: Proxy tail)
     in
       [ param ] <> rest
 
@@ -739,6 +904,22 @@ instance RenderJSONSchema a => RenderJSONSchema (JSON a) where
 instance RenderJSONSchema a => RenderJSONSchema (FormData a) where
   renderJSONSchema _ = renderJSONSchema (Proxy :: Proxy a)
 
+-- MultipartFormData encoding wrapper (unwrap and render inner type)
+instance RenderJSONSchema a => RenderJSONSchema (MultipartFormData a) where
+  renderJSONSchema _ = renderJSONSchema (Proxy :: Proxy a)
+
+-- PlainText encoding wrapper (renders as string)
+instance RenderJSONSchema (PlainText a) where
+  renderJSONSchema _ = unsafeCoerce { type: "string" }
+
+-- XML encoding wrapper (unwrap and render inner type)
+instance RenderJSONSchema a => RenderJSONSchema (XML a) where
+  renderJSONSchema _ = renderJSONSchema (Proxy :: Proxy a)
+
+-- CustomContentType encoding wrapper (unwrap and render inner type)
+instance RenderJSONSchema a => RenderJSONSchema (CustomContentType mime a) where
+  renderJSONSchema _ = renderJSONSchema (Proxy :: Proxy a)
+
 -- NoBody encoding (no schema)
 instance RenderJSONSchema NoBody where
   renderJSONSchema _ = unsafeCoerce { type: "null" }
@@ -810,6 +991,10 @@ instance (RenderJSONSchema a, HasEnum (Enum a)) => RenderJSONSchema (Enum a) whe
     in
       unsafeCoerce withEnum
 
+-- Examples wrapper: render inner type (examples are handled elsewhere)
+instance RenderJSONSchema a => RenderJSONSchema (Examples examplesRow a) where
+  renderJSONSchema _ = renderJSONSchema (Proxy :: Proxy a)
+
 -- Schema wrapper: generates $ref instead of inline schema
 instance (IsSymbol name, RenderJSONSchema a) => RenderJSONSchema (Schema name a) where
   renderJSONSchema _ =
@@ -854,6 +1039,103 @@ instance
       [ fieldName ] <> rest
 
 --------------------------------------------------------------------------------
+-- Content Type Extraction
+--------------------------------------------------------------------------------
+
+-- | Extract MIME type from encoding wrapper types
+class GetContentType (encoding :: Type) where
+  getContentType :: Proxy encoding -> String
+
+instance GetContentType NoBody where
+  getContentType _ = ""
+
+instance GetContentType (JSON a) where
+  getContentType _ = "application/json"
+
+instance GetContentType (FormData a) where
+  getContentType _ = "application/x-www-form-urlencoded"
+
+instance GetContentType (MultipartFormData a) where
+  getContentType _ = "multipart/form-data"
+
+instance GetContentType (PlainText a) where
+  getContentType _ = "text/plain"
+
+instance GetContentType (XML a) where
+  getContentType _ = "application/xml"
+
+instance IsSymbol mime => GetContentType (CustomContentType mime a) where
+  getContentType _ = reflectSymbol (Proxy :: Proxy mime)
+
+-- For unwrapped types (backward compatibility), default to JSON
+instance GetContentType String where
+  getContentType _ = "application/json"
+
+instance GetContentType Int where
+  getContentType _ = "application/json"
+
+instance GetContentType Number where
+  getContentType _ = "application/json"
+
+instance GetContentType Boolean where
+  getContentType _ = "application/json"
+
+instance GetContentType Unit where
+  getContentType _ = "application/json"
+
+instance GetContentType a => GetContentType (Array a) where
+  getContentType _ = "application/json"
+
+instance GetContentType a => GetContentType (Maybe a) where
+  getContentType _ = "application/json"
+
+instance GetContentType (Record row) where
+  getContentType _ = "application/json"
+
+-- Metadata wrappers: pass through to inner type
+instance GetContentType a => GetContentType (Description desc a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Example ex a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Format fmt a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Nullable a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Deprecated a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Enum a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Schema name a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Minimum v a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Maximum v a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Pattern pat a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (MinLength v a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (MaxLength v a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Title t a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+instance GetContentType a => GetContentType (Default val a) where
+  getContentType _ = getContentType (Proxy :: Proxy a)
+
+--------------------------------------------------------------------------------
 -- Request Body Schema Generation
 --------------------------------------------------------------------------------
 
@@ -885,6 +1167,45 @@ instance RenderJSONSchema a => RenderRequestBodySchema (FormData a) where
             { schema: renderJSONSchema (Proxy :: Proxy a) }
         }
     }
+
+-- MultipartFormData: request body with multipart/form-data content type
+instance RenderJSONSchema a => RenderRequestBodySchema (MultipartFormData a) where
+  renderRequestBodySchema _ = Just
+    { required: true
+    , content: unsafeCoerce
+        { "multipart/form-data":
+            { schema: renderJSONSchema (Proxy :: Proxy a) }
+        }
+    }
+
+-- PlainText: request body with text/plain content type
+instance RenderRequestBodySchema (PlainText a) where
+  renderRequestBodySchema _ = Just
+    { required: true
+    , content: unsafeCoerce
+        { "text/plain":
+            { schema: unsafeCoerce { type: "string" } }
+        }
+    }
+
+-- XML: request body with application/xml content type
+instance RenderJSONSchema a => RenderRequestBodySchema (XML a) where
+  renderRequestBodySchema _ = Just
+    { required: true
+    , content: unsafeCoerce
+        { "application/xml":
+            { schema: renderJSONSchema (Proxy :: Proxy a) }
+        }
+    }
+
+-- CustomContentType: request body with custom MIME type
+instance (IsSymbol mime, RenderJSONSchema a) => RenderRequestBodySchema (CustomContentType mime a) where
+  renderRequestBodySchema _ =
+    let
+      mimeType = reflectSymbol (Proxy :: Proxy mime)
+      contentObj = FObject.singleton mimeType (unsafeCoerce { schema: renderJSONSchema (Proxy :: Proxy a) })
+    in
+      Just { required: true, content: unsafeCoerce contentObj }
 
 --------------------------------------------------------------------------------
 -- Response Headers Schema Generation
@@ -982,26 +1303,22 @@ class RenderResponseSchema (headers :: Row Type) (body :: Type) where
     -> { "200" ::
            { description :: String
            , headers :: FObject.Object ResponseHeaderObject
-           , content ::
-               { "application/json" ::
-                   { schema :: Foreign }
-               }
+           , content :: Foreign
            }
        }
 
-instance (RenderResponseHeadersSchema headers, RenderJSONSchema body) => RenderResponseSchema headers body where
+instance (RenderResponseHeadersSchema headers, RenderJSONSchema body, GetContentType body) => RenderResponseSchema headers body where
   renderResponseSchema headersProxy bodyProxy =
     let
       headers = renderResponseHeadersSchema headersProxy
       bodySchema = renderJSONSchema bodyProxy
+      contentType = getContentType bodyProxy
+      contentObj = FObject.singleton contentType (unsafeCoerce { schema: bodySchema })
     in
       { "200":
           { description: "Successful response"
           , headers: headers
-          , content:
-              { "application/json":
-                  { schema: bodySchema }
-              }
+          , content: unsafeCoerce contentObj
           }
       }
 
@@ -1013,7 +1330,7 @@ instance (RenderResponseHeadersSchema headers, RenderJSONSchema body) => RenderR
 type ResponseObject =
   { description :: String
   , headers :: FObject.Object ResponseHeaderObject
-  , content :: { "application/json" :: { schema :: Foreign } }
+  , content :: Foreign
   }
 
 -- | Render variant response schema as OpenAPI responses object
@@ -1043,6 +1360,8 @@ instance renderVariantResponseSchemaRLCons ::
   , ToResponse recordType headers body
   , RenderResponseHeadersSchema headers
   , RenderJSONSchema body
+  , GetContentType body
+  -- , HasLinks recordType
   , RenderVariantResponseSchemaRL tail
   ) =>
   RenderVariantResponseSchemaRL (Cons label recordType tail) where
@@ -1052,26 +1371,83 @@ instance renderVariantResponseSchemaRLCons ::
       statusCodeStr = statusCodeToString statusCode
       headersObj = renderResponseHeadersSchema (Proxy :: Proxy headers)
       bodySchema = renderJSONSchema (Proxy :: Proxy body)
-      -- TODO: Links support (incomplete feature)
+      contentType = getContentType (Proxy :: Proxy body)
+      contentObj = FObject.singleton contentType (unsafeCoerce { schema: bodySchema })
       -- linksArray = links (Proxy :: Proxy recordType)
       -- linksObj =
-      --   if Array.null linksArray then Nothing
-      --   else Just $ FObject.fromFoldable $ linksArray <#> \link ->
+      --   if Array.null linksArray then FObject.empty
+      --   else FObject.fromFoldable $ linksArray <#> \link ->
       --     Tuple link.name $ unsafeCoerce $ FObject.fromFoldable
       --       [ Tuple "operationId" (unsafeCoerce link.operationId)
       --       , Tuple "parameters" link.parameters
       --       ]
-      responseObj =
+      responseObjBase =
         { description: "Successful response"
         , headers: headersObj
-        , content:
-            { "application/json":
-                { schema: bodySchema }
-            }
+        , content: unsafeCoerce contentObj
         }
+      responseObj = unsafeCoerce responseObjBase
+      -- if FObject.isEmpty linksObj then unsafeCoerce responseObjBase
+      -- else unsafeCoerce $ FObject.insert "links" (unsafeCoerce linksObj) (unsafeCoerce responseObjBase :: FObject.Object Foreign)
       rest = renderVariantResponseSchemaRL (Proxy :: Proxy tail)
     in
       FObject.insert statusCodeStr responseObj rest
+
+-- --------------------------------------------------------------------------------
+-- -- RenderCallbacks: Render full callback objects for OpenAPI
+-- --------------------------------------------------------------------------------
+
+-- | Render callbacks with full method, requestBody, and responses information.
+-- | This typeclass walks through Callback wrappers and renders complete callback objects.
+class RenderCallbacks (ty :: Type) where
+  renderCallbacks :: Proxy ty -> FObject.Object Foreign
+
+-- Callback wrapper: render this callback and recurse
+instance
+  ( IsSymbol name
+  , IsSymbol expression
+  , RenderMethod method
+  , RenderRequestBodySchema requestBody
+  , RowToList responseRow rl
+  , RenderVariantResponseSchemaRL rl
+  , RenderCallbacks inner
+  ) =>
+  RenderCallbacks (Callback inner name expression method requestBody responseRow) where
+  renderCallbacks _ =
+    let
+      callbackName = reflectSymbol (Proxy :: Proxy name)
+      callbackExpr = reflectSymbol (Proxy :: Proxy expression)
+      callbackMethodStr = String.toLower (renderMethod (Proxy :: Proxy method))
+
+      -- Build request body if present
+      reqBodyObj = case renderRequestBodySchema (Proxy :: Proxy requestBody) of
+        Nothing -> FObject.empty
+        Just { required, content } ->
+          FObject.fromFoldable
+            [ Tuple "required" (unsafeCoerce required)
+            , Tuple "content" content
+            ]
+
+      -- Build responses
+      respSchemas = renderVariantResponseSchemaRL (Proxy :: Proxy rl)
+
+      -- Build operation object for this callback
+      operationObj = FObject.fromFoldable $
+        [ Tuple "responses" (unsafeCoerce respSchemas) ] <>
+          (if FObject.isEmpty reqBodyObj then [] else [ Tuple "requestBody" (unsafeCoerce reqBodyObj) ])
+
+      -- Build the callback structure: { expression: { method: operation } }
+      methodObj = FObject.singleton callbackMethodStr (unsafeCoerce operationObj)
+      expressionObj = FObject.singleton callbackExpr (unsafeCoerce methodObj)
+
+      -- Get inner callbacks
+      innerCallbacks = renderCallbacks (Proxy :: Proxy inner)
+    in
+      FObject.insert callbackName (unsafeCoerce expressionObj) innerCallbacks
+
+-- Base case: no callbacks
+else instance RenderCallbacks ty where
+  renderCallbacks _ = FObject.empty
 
 --------------------------------------------------------------------------------
 -- ToOpenAPI
@@ -1130,6 +1506,22 @@ instance CollectSchemas a => CollectSchemas (JSON a) where
 instance CollectSchemas a => CollectSchemas (FormData a) where
   collectSchemas _ = collectSchemas (Proxy :: Proxy a)
 
+-- MultipartFormData wrapper: unwrap and recurse
+instance CollectSchemas a => CollectSchemas (MultipartFormData a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- PlainText wrapper: no nested schemas to collect
+instance CollectSchemas (PlainText a) where
+  collectSchemas _ = FObject.empty
+
+-- XML wrapper: unwrap and recurse
+instance CollectSchemas a => CollectSchemas (XML a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- CustomContentType wrapper: unwrap and recurse
+instance CollectSchemas a => CollectSchemas (CustomContentType mime a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
 -- NoBody: no schemas
 instance CollectSchemas NoBody where
   collectSchemas _ = FObject.empty
@@ -1184,6 +1576,10 @@ instance CollectSchemas a => CollectSchemas (Deprecated a) where
   collectSchemas _ = collectSchemas (Proxy :: Proxy a)
 
 instance CollectSchemas a => CollectSchemas (Enum a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- Examples wrapper: recurse through to find schemas
+instance CollectSchemas a => CollectSchemas (Examples examplesRow a) where
   collectSchemas _ = collectSchemas (Proxy :: Proxy a)
 
 -- | Helper class to collect schemas from record fields
@@ -1270,6 +1666,10 @@ instance (RowToList row rl, CollectSchemaNamesRL rl names) => CollectSchemaNames
 
 instance CollectSchemaNames a names => CollectSchemaNames (JSON a) names
 instance CollectSchemaNames a names => CollectSchemaNames (FormData a) names
+instance CollectSchemaNames a names => CollectSchemaNames (MultipartFormData a) names
+instance CollectSchemaNames (PlainText a) ()
+instance CollectSchemaNames a names => CollectSchemaNames (XML a) names
+instance CollectSchemaNames a names => CollectSchemaNames (CustomContentType mime a) names
 instance CollectSchemaNames NoBody ()
 
 instance
@@ -1293,6 +1693,7 @@ instance CollectSchemaNames a names => CollectSchemaNames (Nullable a) names
 instance CollectSchemaNames a names => CollectSchemaNames (Default val a) names
 instance CollectSchemaNames a names => CollectSchemaNames (Deprecated a) names
 instance CollectSchemaNames a names => CollectSchemaNames (Enum a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Examples examplesRow a) names
 
 -- | Helper class to collect schema names from record fields
 class CollectSchemaNamesRL (rl :: RowList Type) (names :: Row Type) | rl -> names
@@ -1458,8 +1859,18 @@ buildSecuritySchemes ops =
             , scheme: "digest"
             }
           _ ->
-            -- API Key (header names ending with "ApiKey")
-            if String.take (String.length key - 6) key /= "" && String.drop (String.length key - 6) key == "ApiKey" then
+            -- API Key in cookie (names ending with "Cookie")
+            if String.take (String.length key - 6) key /= "" && String.drop (String.length key - 6) key == "Cookie" then
+              let
+                cookieName = String.take (String.length key - 6) key
+              in
+                Just $ Tuple key $ unsafeCoerce
+                  { type: "apiKey"
+                  , in: "cookie"
+                  , name: cookieName
+                  }
+            -- API Key in header (names ending with "ApiKey")
+            else if String.take (String.length key - 6) key /= "" && String.drop (String.length key - 6) key == "ApiKey" then
               let
                 headerName = String.take (String.length key - 6) key
               in
@@ -1501,7 +1912,12 @@ buildOpenAPISpec
    . CollectOperations routes
   => CollectRouteSchemas routes
   => ValidateSchemaNames routes
-  => { title :: String, version :: String }
+  => { title :: String
+     , version :: String
+     , description :: Maybe String
+     , contact :: Maybe { name :: Maybe String, url :: Maybe String, email :: Maybe String }
+     , license :: Maybe { name :: String, url :: Maybe String }
+     }
   -> OpenAPISpec
 buildOpenAPISpec info = buildOpenAPISpec' @routes info { servers: Nothing }
 
@@ -1511,7 +1927,12 @@ buildOpenAPISpec'
    . CollectOperations routes
   => CollectRouteSchemas routes
   => ValidateSchemaNames routes
-  => { title :: String, version :: String }
+  => { title :: String
+     , version :: String
+     , description :: Maybe String
+     , contact :: Maybe { name :: Maybe String, url :: Maybe String, email :: Maybe String }
+     , license :: Maybe { name :: String, url :: Maybe String }
+     }
   -> { servers :: Maybe (Array ServerObject) }
   -> OpenAPISpec
 buildOpenAPISpec' info config =
@@ -1528,9 +1949,45 @@ buildOpenAPISpec' info config =
         (if FObject.isEmpty schemas then [] else [ Tuple "schemas" (unsafeCoerce schemas) ])
           <> (if FObject.isEmpty securitySchemes then [] else [ Tuple "securitySchemes" (unsafeCoerce securitySchemes) ])
 
+    -- Build info object with optional fields
+    infoBase = FObject.fromFoldable
+      [ Tuple "title" (writeImpl info.title)
+      , Tuple "version" (writeImpl info.version)
+      ]
+    infoWithDescription = case info.description of
+      Nothing -> infoBase
+      Just desc -> FObject.insert "description" (writeImpl desc) infoBase
+    infoWithContact = case info.contact of
+      Nothing -> infoWithDescription
+      Just contact ->
+        let
+          contactBase = FObject.empty
+          withName = case contact.name of
+            Nothing -> contactBase
+            Just name -> FObject.insert "name" (writeImpl name) contactBase
+          withUrl = case contact.url of
+            Nothing -> withName
+            Just url -> FObject.insert "url" (writeImpl url) withName
+          withEmail = case contact.email of
+            Nothing -> withUrl
+            Just email -> FObject.insert "email" (writeImpl email) withUrl
+        in
+          if FObject.isEmpty withEmail then infoWithDescription
+          else FObject.insert "contact" (unsafeCoerce withEmail) infoWithDescription
+    infoWithLicense = case info.license of
+      Nothing -> infoWithContact
+      Just license ->
+        let
+          licenseBase = FObject.singleton "name" (writeImpl license.name)
+          licenseWithUrl = case license.url of
+            Nothing -> licenseBase
+            Just url -> FObject.insert "url" (writeImpl url) licenseBase
+        in
+          FObject.insert "license" (unsafeCoerce licenseWithUrl) infoWithContact
+
     baseSpec = FObject.fromFoldable
       [ Tuple "openapi" (unsafeCoerce "3.0.0")
-      , Tuple "info" (unsafeCoerce { title: info.title, version: info.version })
+      , Tuple "info" (unsafeCoerce infoWithLicense)
       , Tuple "paths" (unsafeCoerce paths)
       ]
     withComponents = case components of

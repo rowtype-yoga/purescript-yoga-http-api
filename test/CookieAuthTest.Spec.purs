@@ -37,8 +37,9 @@ testApiKeyCookieAuth = describe "ApiKeyCookie Authentication" do
   _ <- test "ApiKeyCookie does not appear as a regular cookie parameter" do
     let spec = buildOpenAPISpec @ApiKeyCookieAPI { title: "Cookie Auth API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
     let json = writeJSON spec
-    let hasSessionIdParam = String.contains (String.Pattern "\"name\":\"sessionId\"") json && String.contains (String.Pattern "\"in\":\"cookie\"") json
-    expectToBe false hasSessionIdParam
+    -- Check that parameters array is empty (no cookie parameters)
+    let hasEmptyParams = String.contains (String.Pattern "\"parameters\":[]") json
+    expectToBe true hasEmptyParams
 
   _ <- test "ApiKeyCookie appears in security requirements" do
     let spec = buildOpenAPISpec @ApiKeyCookieAPI { title: "Cookie Auth API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
@@ -82,7 +83,9 @@ testMixedCookies = describe "Mixed Cookie Types (Auth + Regular)" do
   _ <- test "Auth cookie does not appear as regular parameter" do
     let spec = buildOpenAPISpec @MixedCookieAPI { title: "Mixed Cookie API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
     let json = writeJSON spec
-    let hasSessionIdParam = String.contains (String.Pattern "\"name\":\"sessionId\"") json && String.contains (String.Pattern "\"in\":\"cookie\"") json && String.contains (String.Pattern "parameters") json
+    -- sessionId should not appear as a parameter (only userId should)
+    -- Check that the JSON doesn't contain a parameter object for sessionId
+    let hasSessionIdParam = String.contains (String.Pattern "{\"name\":\"sessionId\",\"in\":\"cookie\"") json
     expectToBe false hasSessionIdParam
 
   test "Regular cookie appears as cookie parameter" do

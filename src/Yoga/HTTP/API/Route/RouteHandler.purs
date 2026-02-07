@@ -34,8 +34,8 @@ class
   | route -> pathParams queryParams reqHeaders body respVariant
 
 instance
-  ( Row.Union partialRequest o_ (headers :: Record fullHeaders, body :: fullEncoding)
-  , DefaultRequestFields partialRequest fullHeaders fullEncoding
+  ( Row.Union partialRequest o_ (headers :: Record fullHeaders, cookies :: Record fullCookies, body :: fullEncoding)
+  , DefaultRequestFields partialRequest fullHeaders fullCookies fullEncoding
   , SegmentPathParams segments pathParams
   , SegmentQueryParams segments queryParams
   , EncodingBody fullEncoding body

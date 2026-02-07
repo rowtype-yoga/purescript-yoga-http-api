@@ -10,6 +10,11 @@ import MetadataValidationTest.Spec as MetadataValidationTest
 import APIRecordTest.Spec as APIRecordTest
 import SchemaComponentTest.Spec as SchemaComponentTest
 import BearerAuthTest.Spec as BearerAuthTest
+-- import CallbackTest.Spec as CallbackTest
+import CookieAuthTest.Spec as CookieAuthTest
+import OpenAPIInfoTest.Spec as OpenAPIInfoTest
+import ContentTypeTest.Spec as ContentTypeTest
+import ExamplesTest.Spec as ExamplesTest
 
 spec :: Effect ViTest
 spec = do
@@ -44,6 +49,28 @@ spec = do
   _ <- BearerAuthTest.testApiKeyAuth
   _ <- BearerAuthTest.testDigestAuth
   _ <- BearerAuthTest.testMultipleAuthTypes
+  _ <- CookieAuthTest.testApiKeyCookieAuth
+  _ <- CookieAuthTest.testRegularCookieParams
+  _ <- CookieAuthTest.testMixedCookies
+  _ <- OpenAPIInfoTest.testInfoDescription
+  _ <- OpenAPIInfoTest.testInfoContact
+  _ <- OpenAPIInfoTest.testInfoLicense
+  _ <- OpenAPIInfoTest.testInfoAllFields
+  _ <- ContentTypeTest.testRequestContentTypes
+  _ <- ContentTypeTest.testResponseContentTypes
+  _ <- ContentTypeTest.testMixedContentTypes
+  _ <- ExamplesTest.testExamplesMetadataExtraction
+  _ <- ExamplesTest.testExamplesInParameters
+  _ <- ExamplesTest.testExamplesInRequestBody
+  _ <- ExamplesTest.testExamplesWithSummary
+  _ <- ExamplesTest.testExamplesBackwardCompatibility
+  _ <- ExamplesTest.testExamplesInQueryParams
+  _ <- ExamplesTest.testComplexExampleObject
+  -- _ <- CallbackTest.testPaymentCallback
+  -- _ <- CallbackTest.testMultipleCallbacks
+  -- _ <- CallbackTest.testCallbackMethods
+  -- _ <- CallbackTest.testAPISpecWithCallbacks
+  -- _ <- CallbackTest.testRealWorldWebhooks
   SchemaComponentTest.testSchemaComponents
 
 main :: ViTest

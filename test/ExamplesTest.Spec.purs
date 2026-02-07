@@ -2,15 +2,15 @@ module ExamplesTest.Spec where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), isJust, isNothing)
 import Data.String as String
 import Effect (Effect)
 import Type.Function (type (#))
 import Type.Proxy (Proxy(..))
-import Yoga.HTTP.API.Path (Path, Lit, Var)
+import Yoga.HTTP.API.Path (Path, Lit, Capture, type (/))
 import Yoga.HTTP.API.Route (GET, POST, Route, Request, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Encoding (JSON)
-import Yoga.HTTP.API.Route.OpenAPIMetadata (Examples, ExampleValue, ExampleWithSummary, ExampleObject, example, examples)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (Example, Examples, ExampleValue, ExampleWithSummary, ExampleObject, example, examples)
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)
@@ -21,22 +21,22 @@ testExamplesMetadataExtraction = describe "Examples Metadata - Type-level extrac
     let
       p = Proxy :: Proxy Int
       result = examples p
-    expectToBe true (result == Nothing)
+    expectToBe true (isNothing result)
 
   _ <- test "extracts single example from Examples wrapper" do
     let
       p = Proxy :: Proxy (Int # Examples (basic :: ExampleValue "42"))
       result = examples p
-    expectToBe true (result /= Nothing)
+    expectToBe true (isJust result)
 
   test "extracts multiple examples from Examples wrapper" do
     let
       p = Proxy :: Proxy (Int # Examples (basic :: ExampleValue "42", advanced :: ExampleValue "100"))
       result = examples p
-    expectToBe true (result /= Nothing)
+    expectToBe true (isJust result)
 
 type TestAPIWithPathExamples =
-  { getUser :: Route GET (Path (Lit "users" / Var "userId" (Int # Examples (basic :: ExampleValue "123", premium :: ExampleWithSummary "456" "Premium user")))) (Request {}) (ok :: { body :: { id :: Int, name :: String } })
+  { getUser :: Route GET (Path (Lit "users" / Capture "userId" (Int # Examples (basic :: ExampleValue "123", premium :: ExampleWithSummary "456" "Premium user")))) (Request {}) (ok :: { body :: { id :: Int, name :: String } })
   }
 
 testExamplesInParameters :: Effect ViTest
@@ -77,7 +77,7 @@ testExamplesInRequestBody = describe "Examples in Request Body" do
     expectToBe true (String.contains (String.Pattern "users") json)
 
 type TestAPIWithComplexExamples =
-  { getItem :: Route GET (Path (Lit "items" / Var "itemId" (Int # Examples (basic :: ExampleWithSummary "42" "A basic item", special :: ExampleObject "999" "Special item" "A very special item" "")))) (Request {}) (ok :: { body :: { id :: Int } })
+  { getItem :: Route GET (Path (Lit "items" / Capture "itemId" (Int # Examples (basic :: ExampleWithSummary "42" "A basic item", special :: ExampleObject "999" "Special item" "A very special item" "")))) (Request {}) (ok :: { body :: { id :: Int } })
   }
 
 testExamplesWithSummary :: Effect ViTest
@@ -98,17 +98,17 @@ testExamplesBackwardCompatibility :: Effect ViTest
 testExamplesBackwardCompatibility = describe "Backward Compatibility - Single Example" do
   _ <- test "single Example still works" do
     let
-      p = Proxy :: Proxy (Int # Yoga.HTTP.API.Route.OpenAPIMetadata.Example "42")
+      p = Proxy :: Proxy (Int # Example "42")
       result = example p
     expectToBe true (result == Just "42")
 
   test "Example and Examples can coexist" do
     let
-      p = Proxy :: Proxy (Int # Yoga.HTTP.API.Route.OpenAPIMetadata.Example "42" # Examples (alt1 :: ExampleValue "100", alt2 :: ExampleValue "200"))
+      p = Proxy :: Proxy (Int # Example "42" # Examples (alt1 :: ExampleValue "100", alt2 :: ExampleValue "200"))
       exResult = example p
       exsResult = examples p
     expectToBe true (exResult == Just "42")
-    expectToBe true (exsResult /= Nothing)
+    expectToBe true (isJust exsResult)
 
 type TestAPIWithQueryExamples =
   { searchItems :: Route GET (Path (Lit "items")) (Request { query :: { limit :: Int # Examples (small :: ExampleValue "10", large :: ExampleValue "100") } }) (ok :: { body :: { items :: Array String } })
@@ -129,7 +129,7 @@ testExamplesInQueryParams = describe "Examples in Query Parameters" do
     expectToBe true (String.contains (String.Pattern "items") json)
 
 type TestAPIWithExternalExample =
-  { getResource :: Route GET (Path (Lit "resource" / Var "id" (String # Examples (inline :: ExampleObject "abc123" "Inline example" "An example with inline value" "", external :: ExampleObject "" "External example" "An example from external URL" "https://example.com/resource.json")))) (Request {}) (ok :: { body :: { data :: String } })
+  { getResource :: Route GET (Path (Lit "resource" / Capture "id" (String # Examples (inline :: ExampleObject "abc123" "Inline example" "An example with inline value" "", external :: ExampleObject "" "External example" "An example from external URL" "https://example.com/resource.json")))) (Request {}) (ok :: { body :: { data :: String } })
   }
 
 testComplexExampleObject :: Effect ViTest

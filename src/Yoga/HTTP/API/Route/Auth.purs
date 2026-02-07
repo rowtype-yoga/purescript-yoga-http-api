@@ -2,6 +2,7 @@ module Yoga.HTTP.API.Route.Auth
   ( BearerToken(..)
   , BasicAuth(..)
   , ApiKeyHeader(..)
+  , ApiKeyCookie(..)
   , DigestAuth(..)
   ) where
 
@@ -86,6 +87,30 @@ instance HeaderValue ApiKeyHeader where
   printHeader (ApiKeyHeader key) = key
 
 instance HeaderValueType ApiKeyHeader where
+  headerValueType _ = "string"
+
+--------------------------------------------------------------------------------
+-- ApiKeyCookie
+--------------------------------------------------------------------------------
+
+-- | API Key passed in a cookie (for authentication purposes)
+-- | This is a marker type that indicates the cookie should be treated as
+-- | an authentication mechanism in OpenAPI (securitySchemes) rather than
+-- | a regular cookie parameter.
+-- |
+-- | Example:
+-- |   Request { cookies :: { sessionId :: ApiKeyCookie } }
+newtype ApiKeyCookie = ApiKeyCookie String
+
+derive instance Eq ApiKeyCookie
+derive newtype instance Show ApiKeyCookie
+derive instance Newtype ApiKeyCookie _
+
+instance HeaderValue ApiKeyCookie where
+  parseHeader = Right <<< ApiKeyCookie
+  printHeader (ApiKeyCookie key) = key
+
+instance HeaderValueType ApiKeyCookie where
   headerValueType _ = "string"
 
 --------------------------------------------------------------------------------

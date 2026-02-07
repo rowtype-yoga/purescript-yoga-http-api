@@ -9,6 +9,7 @@ module Yoga.HTTP.API.Route.Handler
   , class EncodingBody
   , class CaptureParams
   , class RequestHeaders
+  , class RequestCookies
   , class RequestBody
   ) where
 
@@ -172,6 +173,20 @@ instance requestHeadersRequest ::
   RequestHeaders (Request (Record requestRow)) headers
 
 --------------------------------------------------------------------------------
+-- RequestCookies: Extract cookies row from a request type
+--------------------------------------------------------------------------------
+
+-- | Extract the cookies row from a Request type.
+-- |
+-- | The request is expected to have a `cookies` field.
+class RequestCookies (request :: Type) (cookies :: Row Type) | request -> cookies
+
+instance requestCookiesRequest ::
+  ( Row.Cons "cookies" (Record cookies) _rest requestRow
+  ) =>
+  RequestCookies (Request (Record requestRow)) cookies
+
+--------------------------------------------------------------------------------
 -- RequestBody: Extract body encoding from a request type
 --------------------------------------------------------------------------------
 
@@ -192,35 +207,42 @@ instance requestBodyRequest ::
 -- | Compute defaults for missing request fields using RowList.
 -- |
 -- | When a Request omits `headers`, defaults to `()`.
+-- | When a Request omits `cookies`, defaults to `()`.
 -- | When a Request omits `body`, defaults to `NoBody`.
-class DefaultRequestFields (partialRequest :: Row Type) (fullHeaders :: Row Type) (fullEncoding :: Type) | partialRequest -> fullHeaders fullEncoding
+class DefaultRequestFields (partialRequest :: Row Type) (fullHeaders :: Row Type) (fullCookies :: Row Type) (fullEncoding :: Type) | partialRequest -> fullHeaders fullCookies fullEncoding
 
 instance defaultRequestFieldsImpl ::
   ( RL.RowToList partialRequest rl
-  , DefaultRequestFieldsRL rl partialRequest fullHeaders fullEncoding
+  , DefaultRequestFieldsRL rl partialRequest fullHeaders fullCookies fullEncoding
   ) =>
-  DefaultRequestFields partialRequest fullHeaders fullEncoding
+  DefaultRequestFields partialRequest fullHeaders fullCookies fullEncoding
 
 -- | RowList-based implementation
-class DefaultRequestFieldsRL (rl :: RL.RowList Type) (partialRequest :: Row Type) (fullHeaders :: Row Type) (fullEncoding :: Type) | rl partialRequest -> fullHeaders fullEncoding
+class DefaultRequestFieldsRL (rl :: RL.RowList Type) (partialRequest :: Row Type) (fullHeaders :: Row Type) (fullCookies :: Row Type) (fullEncoding :: Type) | rl partialRequest -> fullHeaders fullCookies fullEncoding
 
--- Empty list - no fields present, default both
-instance defaultFieldsRLNil :: DefaultRequestFieldsRL RL.Nil partialRequest () NoBody
+-- Empty list - no fields present, default all
+instance defaultFieldsRLNil :: DefaultRequestFieldsRL RL.Nil partialRequest () () NoBody
 
 -- headers present
 instance defaultFieldsRLHeadersCons ::
-  ( DefaultRequestFieldsRL tail partialRequest () encoding
+  ( DefaultRequestFieldsRL tail partialRequest () cookies encoding
   ) =>
-  DefaultRequestFieldsRL (RL.Cons "headers" (Record headers) tail) partialRequest headers encoding
+  DefaultRequestFieldsRL (RL.Cons "headers" (Record headers) tail) partialRequest headers cookies encoding
+
+-- cookies present
+else instance defaultFieldsRLCookiesCons ::
+  ( DefaultRequestFieldsRL tail partialRequest headers () encoding
+  ) =>
+  DefaultRequestFieldsRL (RL.Cons "cookies" (Record cookies) tail) partialRequest headers cookies encoding
 
 -- body present
 else instance defaultFieldsRLBodyCons ::
-  ( DefaultRequestFieldsRL tail partialRequest headers NoBody
+  ( DefaultRequestFieldsRL tail partialRequest headers cookies NoBody
   ) =>
-  DefaultRequestFieldsRL (RL.Cons "body" encoding tail) partialRequest headers encoding
+  DefaultRequestFieldsRL (RL.Cons "body" encoding tail) partialRequest headers cookies encoding
 
 -- Other fields (catch-all for unrecognized fields)
 else instance defaultFieldsRLOtherCons ::
-  ( DefaultRequestFieldsRL tail partialRequest headers encoding
+  ( DefaultRequestFieldsRL tail partialRequest headers cookies encoding
   ) =>
-  DefaultRequestFieldsRL (RL.Cons otherLabel otherType tail) partialRequest headers encoding
+  DefaultRequestFieldsRL (RL.Cons otherLabel otherType tail) partialRequest headers cookies encoding

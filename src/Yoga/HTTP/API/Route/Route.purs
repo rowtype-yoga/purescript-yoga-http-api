@@ -12,9 +12,10 @@ import Prim.Row (class Cons, class Lacks, class Union)
 import Prim.RowList (class RowToList, RowList)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
+import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Path (class PathPattern, pathPattern)
 import Yoga.HTTP.API.Route.Handler (Request, class DefaultRequestFields, class SegmentPathParams, class SegmentQueryParams)
-import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class ToOpenAPI, toOpenAPIImpl, class CollectSchemas, collectSchemas, class CollectVariantSchemasRL, collectVariantSchemasRL, class CollectRouteSchemas, class CollectSchemaNames, class CollectVariantSchemaNames, class CollectRouteSchemaNames)
+import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderCookieParamsSchema, renderCookieParamsSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class DetectCookieSecurity, detectCookieSecurity, class ToOpenAPI, toOpenAPIImpl, class CollectSchemas, collectSchemas, class CollectVariantSchemasRL, collectVariantSchemasRL, class CollectRouteSchemas, class CollectSchemaNames, class CollectVariantSchemaNames, class CollectRouteSchemaNames)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (class HasOperationMetadata, operationMetadata)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.HTTP.API.Route.Response (Response, class ToResponse)
@@ -54,9 +55,11 @@ instance convertResponseVariantRLCons ::
 instance
   ( RenderMethod method
   , PathPattern segments
-  , DefaultRequestFields partialRequest reqHeaders encoding
+  , DefaultRequestFields partialRequest reqHeaders reqCookies encoding
   , RenderHeadersSchema reqHeaders
+  , RenderCookieParamsSchema reqCookies
   , DetectSecurity reqHeaders
+  , DetectCookieSecurity reqCookies
   , SegmentPathParams segments pathParams
   , RenderPathParamsSchema pathParams
   , SegmentQueryParams segments queryParams
@@ -72,12 +75,15 @@ instance
       methodStr = renderMethod (Proxy :: Proxy method)
       pathStr = pathPattern (Proxy :: Proxy segments)
       headerParams = renderHeadersSchema (Proxy :: Proxy reqHeaders)
+      cookieParams = renderCookieParamsSchema (Proxy :: Proxy reqCookies)
       pathParams = renderPathParamsSchema (Proxy :: Proxy pathParams)
       queryParams = renderQueryParamsSchema (Proxy :: Proxy queryParams)
-      parameters = headerParams <> pathParams <> queryParams
+      parameters = headerParams <> cookieParams <> pathParams <> queryParams
       requestBody = renderRequestBodySchema (Proxy :: Proxy encoding)
       responses = renderVariantResponseSchemaRL (Proxy :: Proxy rl)
-      security = detectSecurity (Proxy :: Proxy reqHeaders)
+      headerSecurity = detectSecurity (Proxy :: Proxy reqHeaders)
+      cookieSecurity = detectCookieSecurity (Proxy :: Proxy reqCookies)
+      security = headerSecurity <> cookieSecurity
       metadata = operationMetadata proxy
       operation =
         { method: methodStr
@@ -111,7 +117,7 @@ instance
 
 -- CollectRouteSchemas instance for Route
 instance
-  ( DefaultRequestFields partialRequest reqHeaders encoding
+  ( DefaultRequestFields partialRequest reqHeaders reqCookies encoding
   , CollectSchemas encoding
   , RowToList userResp rl
   , CollectVariantSchemasRL rl
@@ -126,7 +132,7 @@ instance
 
 -- CollectRouteSchemaNames instance for Route (compile-time collision detection)
 instance
-  ( DefaultRequestFields partialRequest reqHeaders encoding
+  ( DefaultRequestFields partialRequest reqHeaders reqCookies encoding
   , CollectSchemaNames encoding reqNames
   , RowToList userResp rl
   , CollectVariantSchemaNames rl respNames

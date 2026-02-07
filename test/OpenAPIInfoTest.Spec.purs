@@ -39,7 +39,9 @@ testInfoDescription = describe "OpenAPI Info - Description" do
         , license: Nothing
         }
       json = writeJSON spec
-    expectToBe false (String.contains (String.Pattern "\"description\"") json)
+    -- Check that description is not in the info object (it will appear in responses, which is required by OpenAPI)
+    let hasInfoDescription = String.contains (String.Pattern "\"info\":{\"title\":\"Test API\",\"version\":\"1.0.0\",\"description\"") json
+    expectToBe false hasInfoDescription
 
 testInfoContact :: Effect ViTest
 testInfoContact = describe "OpenAPI Info - Contact" do

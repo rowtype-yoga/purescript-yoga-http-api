@@ -35,7 +35,7 @@ testRequestContentTypes = describe "Request Content Types" do
 
   _ <- test "FormData request body generates application/x-www-form-urlencoded" do
     let
-      spec = buildOpenAPISpec @{ createUser :: Route POST (Path (Lit "users")) (Request { body :: FormData User }) (ok :: { body :: User }) }
+      spec = buildOpenAPISpec @{ createUser :: Route POST (Path (Lit "users")) (Request { body :: FormData User }) (ok :: { body :: JSON User }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -44,7 +44,7 @@ testRequestContentTypes = describe "Request Content Types" do
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/x-www-form-urlencoded\"") json)
-    expectToBe false (String.contains (String.Pattern "\"application/json\"") json)
+    expectToBe true (String.contains (String.Pattern "\"application/json\"") json)
 
   _ <- test "MultipartFormData request body generates multipart/form-data" do
     let

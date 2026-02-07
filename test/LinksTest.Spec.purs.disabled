@@ -25,35 +25,27 @@ type UsersAPI =
   { listUsers ::
       Route GET "users"
         (Request {})
-        ( ok ::
-            { body :: UserList }
-              # Link "getUser" "getUserById" { userId: "$response.body#/users/0/id" }
+        ( ok :: { body :: UserList } # Link "getUser" "getUserById" (userId :: "$response.body#/users/0/id")
         )
   , getUser ::
       Route GET ("users" / "id" : Int)
         (Request {})
-        ( ok ::
-            { body :: User }
-              # Link "deleteUser" "deleteUserById" { userId: "$response.body#/id" }
-              # Link "updateUser" "updateUserById" { userId: "$response.body#/id" }
+        ( ok :: { body :: User } # Link "deleteUser" "deleteUserById" (userId :: "$response.body#/id") # Link "updateUser" "updateUserById" (userId :: "$response.body#/id")
         )
   , createUser ::
       Route POST "users"
         (Request { body :: JSON User })
-        ( created ::
-            { body :: User, headers :: { "Location" :: String } }
-              # Link "getUser" "getUserById" { userId: "$response.body#/id" }
+        ( created :: { body :: User, headers :: { "Location" :: String } } # Link "getUser" "getUserById" (userId :: "$response.body#/id")
         )
   , updateUser ::
       Route POST ("users" / "id" : Int)
         (Request { body :: JSON User })
-        ( ok ::
-            { body :: User }
+        ( ok :: { body :: User }
         )
   , deleteUser ::
       Route DELETE ("users" / "id" : Int)
         (Request {})
-        ( noContent :: {} )
+        (noContent :: {})
   }
 
 --------------------------------------------------------------------------------
@@ -147,31 +139,25 @@ type BlogAPI =
   { getPosts ::
       Route GET "posts"
         (Request {})
-        ( ok ::
-            { body :: Array { id :: Int, title :: String } }
-              # Link "getPost" "getPostById" { postId: "$response.body#/0/id" }
+        ( ok :: { body :: Array { id :: Int, title :: String } } # Link "getPost" "getPostById" (postId :: "$response.body#/0/id")
         )
   , getPost ::
       Route GET ("posts" / "id" : Int)
         (Request {})
-        ( ok ::
-            { body :: { id :: Int, title :: String, content :: String, authorId :: Int } }
-              # Link "getAuthor" "getAuthorById" { authorId: "$response.body#/authorId" }
-              # Link "updatePost" "updatePostById" { postId: "$response.body#/id" }
-              # Link "deletePost" "deletePostById" { postId: "$response.body#/id" }
+        ( ok :: { body :: { id :: Int, title :: String, content :: String, authorId :: Int } } # Link "getAuthor" "getAuthorById" (authorId :: "$response.body#/authorId") # Link "updatePost" "updatePostById" (postId :: "$response.body#/id") # Link "deletePost" "deletePostById" (postId :: "$response.body#/id")
         )
   , getAuthor ::
       Route GET ("authors" / "id" : Int)
         (Request {})
-        ( ok :: { body :: { id :: Int, name :: String } } )
+        (ok :: { body :: { id :: Int, name :: String } })
   , updatePost ::
       Route POST ("posts" / "id" : Int)
         (Request { body :: JSON { title :: String, content :: String } })
-        ( ok :: { body :: { id :: Int, title :: String, content :: String } } )
+        (ok :: { body :: { id :: Int, title :: String, content :: String } })
   , deletePost ::
       Route DELETE ("posts" / "id" : Int)
         (Request {})
-        ( noContent :: {} )
+        (noContent :: {})
   }
 
 testHATEOASLinks :: Effect ViTest

@@ -2,13 +2,14 @@ module CallbackTest.Spec where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (Path, Lit)
 import Yoga.HTTP.API.Route (GET, POST, Route, Request, buildOpenAPISpec, toOpenAPI)
 import Yoga.HTTP.API.Route.Encoding (JSON)
-import Yoga.HTTP.API.Route.OpenAPIMetadata (Callback)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (Callback, type (#))
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)

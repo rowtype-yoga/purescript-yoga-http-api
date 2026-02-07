@@ -171,8 +171,24 @@ class RenderHeadersSchemaRL (rl :: RowList Type) (headers :: Row Type) | rl -> h
 instance RenderHeadersSchemaRL RL.Nil () where
   renderHeadersSchemaRL _ = []
 
+-- Skip BearerToken headers (they're handled as security schemes, not regular headers)
+instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name BearerToken tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name BearerToken tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip BearerToken wrapped in Description
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Description desc BearerToken) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Description desc BearerToken) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip BearerToken wrapped in Example
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Example ex BearerToken) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Example ex BearerToken) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
+-- Skip BearerToken wrapped in Deprecated
+else instance (RenderHeadersSchemaRL tail tailRow, Row.Cons name (Deprecated BearerToken) tailRow headers, Row.Lacks name tailRow) => RenderHeadersSchemaRL (RL.Cons name (Deprecated BearerToken) tail) headers where
+  renderHeadersSchemaRL _ = renderHeadersSchemaRL (Proxy :: Proxy tail)
+
 -- Required header (non-Maybe type)
-instance
+else instance
   ( IsSymbol name
   , HeaderValueType ty
   , HasDescription ty

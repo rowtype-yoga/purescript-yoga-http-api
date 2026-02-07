@@ -9,6 +9,7 @@ import VariantResponseTest.Spec as VariantResponseTest
 import MetadataValidationTest.Spec as MetadataValidationTest
 import APIRecordTest.Spec as APIRecordTest
 import SchemaComponentTest.Spec as SchemaComponentTest
+import BearerAuthTest.Spec as BearerAuthTest
 
 spec :: Effect ViTest
 spec = do
@@ -38,6 +39,7 @@ spec = do
   _ <- APIRecordTest.testOperationIds
   _ <- APIRecordTest.testBuildOpenAPISpec
   _ <- APIRecordTest.testAPIHandlers
+  _ <- BearerAuthTest.testBearerTokenNotInHeaders
   SchemaComponentTest.testSchemaComponents
 
 main :: ViTest

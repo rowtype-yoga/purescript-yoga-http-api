@@ -1,6 +1,9 @@
 module Yoga.HTTP.API.Route.Response
   ( Response(..)
   , ResponseData
+  , ResponseHeaders
+  , ResponseBody
+  , EmptyResponse
   , class ToResponse
   , class ToResponseRL
   , respond
@@ -13,130 +16,130 @@ module Yoga.HTTP.API.Route.Response
   , respondNoContent
   , respondNotModified
   -- Status code helpers
-, continue
-, continueWith
-, switchingProtocols
-, switchingProtocolsWith
-, processing
-, processingWith
-, earlyHints
-, earlyHintsWith
-, ok
-, okWith
-, created
-, createdWith
-, accepted
-, acceptedWith
-, nonAuthoritativeInformation
-, nonAuthoritativeInformationWith
-, noContent
-, noContentWith
-, resetContent
-, resetContentWith
-, partialContent
-, partialContentWith
-, multiStatus
-, multiStatusWith
-, alreadyReported
-, alreadyReportedWith
-, imUsed
-, imUsedWith
-, multipleChoices
-, multipleChoicesWith
-, movedPermanently
-, movedPermanentlyWith
-, found
-, foundWith
-, seeOther
-, seeOtherWith
-, notModified
-, notModifiedWith
-, useProxy
-, useProxyWith
-, temporaryRedirect
-, temporaryRedirectWith
-, permanentRedirect
-, permanentRedirectWith
-, badRequest
-, badRequestWith
-, unauthorized
-, unauthorizedWith
-, paymentRequired
-, paymentRequiredWith
-, forbidden
-, forbiddenWith
-, notFound
-, notFoundWith
-, methodNotAllowed
-, methodNotAllowedWith
-, notAcceptable
-, notAcceptableWith
-, proxyAuthenticationRequired
-, proxyAuthenticationRequiredWith
-, requestTimeout
-, requestTimeoutWith
-, conflict
-, conflictWith
-, gone
-, goneWith
-, lengthRequired
-, lengthRequiredWith
-, preconditionFailed
-, preconditionFailedWith
-, payloadTooLarge
-, payloadTooLargeWith
-, uriTooLong
-, uriTooLongWith
-, unsupportedMediaType
-, unsupportedMediaTypeWith
-, rangeNotSatisfiable
-, rangeNotSatisfiableWith
-, expectationFailed
-, expectationFailedWith
-, imATeapot
-, imATeapotWith
-, misdirectedRequest
-, misdirectedRequestWith
-, unprocessableEntity
-, unprocessableEntityWith
-, locked
-, lockedWith
-, failedDependency
-, failedDependencyWith
-, tooEarly
-, tooEarlyWith
-, upgradeRequired
-, upgradeRequiredWith
-, preconditionRequired
-, preconditionRequiredWith
-, tooManyRequests
-, tooManyRequestsWith
-, requestHeaderFieldsTooLarge
-, requestHeaderFieldsTooLargeWith
-, unavailableForLegalReasons
-, unavailableForLegalReasonsWith
-, internalServerError
-, internalServerErrorWith
-, notImplemented
-, notImplementedWith
-, badGateway
-, badGatewayWith
-, serviceUnavailable
-, serviceUnavailableWith
-, gatewayTimeout
-, gatewayTimeoutWith
-, httpVersionNotSupported
-, httpVersionNotSupportedWith
-, variantAlsoNegotiates
-, variantAlsoNegotiatesWith
-, insufficientStorage
-, insufficientStorageWith
-, loopDetected
-, loopDetectedWith
-, notExtended
-, notExtendedWith
-, networkAuthenticationRequired
-, networkAuthenticationRequiredWith
+  , continue
+  , continueWith
+  , switchingProtocols
+  , switchingProtocolsWith
+  , processing
+  , processingWith
+  , earlyHints
+  , earlyHintsWith
+  , ok
+  , okWith
+  , created
+  , createdWith
+  , accepted
+  , acceptedWith
+  , nonAuthoritativeInformation
+  , nonAuthoritativeInformationWith
+  , noContent
+  , noContentWith
+  , resetContent
+  , resetContentWith
+  , partialContent
+  , partialContentWith
+  , multiStatus
+  , multiStatusWith
+  , alreadyReported
+  , alreadyReportedWith
+  , imUsed
+  , imUsedWith
+  , multipleChoices
+  , multipleChoicesWith
+  , movedPermanently
+  , movedPermanentlyWith
+  , found
+  , foundWith
+  , seeOther
+  , seeOtherWith
+  , notModified
+  , notModifiedWith
+  , useProxy
+  , useProxyWith
+  , temporaryRedirect
+  , temporaryRedirectWith
+  , permanentRedirect
+  , permanentRedirectWith
+  , badRequest
+  , badRequestWith
+  , unauthorized
+  , unauthorizedWith
+  , paymentRequired
+  , paymentRequiredWith
+  , forbidden
+  , forbiddenWith
+  , notFound
+  , notFoundWith
+  , methodNotAllowed
+  , methodNotAllowedWith
+  , notAcceptable
+  , notAcceptableWith
+  , proxyAuthenticationRequired
+  , proxyAuthenticationRequiredWith
+  , requestTimeout
+  , requestTimeoutWith
+  , conflict
+  , conflictWith
+  , gone
+  , goneWith
+  , lengthRequired
+  , lengthRequiredWith
+  , preconditionFailed
+  , preconditionFailedWith
+  , payloadTooLarge
+  , payloadTooLargeWith
+  , uriTooLong
+  , uriTooLongWith
+  , unsupportedMediaType
+  , unsupportedMediaTypeWith
+  , rangeNotSatisfiable
+  , rangeNotSatisfiableWith
+  , expectationFailed
+  , expectationFailedWith
+  , imATeapot
+  , imATeapotWith
+  , misdirectedRequest
+  , misdirectedRequestWith
+  , unprocessableEntity
+  , unprocessableEntityWith
+  , locked
+  , lockedWith
+  , failedDependency
+  , failedDependencyWith
+  , tooEarly
+  , tooEarlyWith
+  , upgradeRequired
+  , upgradeRequiredWith
+  , preconditionRequired
+  , preconditionRequiredWith
+  , tooManyRequests
+  , tooManyRequestsWith
+  , requestHeaderFieldsTooLarge
+  , requestHeaderFieldsTooLargeWith
+  , unavailableForLegalReasons
+  , unavailableForLegalReasonsWith
+  , internalServerError
+  , internalServerErrorWith
+  , notImplemented
+  , notImplementedWith
+  , badGateway
+  , badGatewayWith
+  , serviceUnavailable
+  , serviceUnavailableWith
+  , gatewayTimeout
+  , gatewayTimeoutWith
+  , httpVersionNotSupported
+  , httpVersionNotSupportedWith
+  , variantAlsoNegotiates
+  , variantAlsoNegotiatesWith
+  , insufficientStorage
+  , insufficientStorageWith
+  , loopDetected
+  , loopDetectedWith
+  , notExtended
+  , notExtendedWith
+  , networkAuthenticationRequired
+  , networkAuthenticationRequiredWith
   , module Data.Variant
   ) where
 
@@ -161,6 +164,12 @@ data Response headers body = Response
   { headers :: Record headers
   , body :: body
   }
+
+type ResponseBody body = Response () body
+
+type ResponseHeaders headers = Response headers Unit
+
+type EmptyResponse = Response () Unit
 
 -- | Deprecated alias for backwards compatibility
 type ResponseData headers body = Response headers body
@@ -314,7 +323,6 @@ respondStatusWith
   -> Variant r2
 respondStatusWith headers body =
   Variant.inj (Proxy :: Proxy label) (Response { headers, body })
-
 
 -- | Construct a variant response with headers but no body
 -- |
@@ -617,4 +625,3 @@ notExtendedWith = respondWith (Proxy :: Proxy "notExtended")
 networkAuthenticationRequired = respondNoHeaders @"networkAuthenticationRequired"
 
 networkAuthenticationRequiredWith = respondWith (Proxy :: Proxy "networkAuthenticationRequired")
-

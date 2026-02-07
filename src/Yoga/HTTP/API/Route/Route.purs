@@ -8,16 +8,17 @@ import Prelude
 
 import Data.Array as Array
 import Data.Maybe (Maybe(..))
-import Prim.Row (class Cons, class Lacks)
+import Prim.Row (class Cons, class Lacks, class Union)
 import Prim.RowList (class RowToList, RowList)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (class PathPattern, pathPattern)
 import Yoga.HTTP.API.Route.Handler (Request, class DefaultRequestFields, class SegmentPathParams, class SegmentQueryParams)
-import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class ToOpenAPI, toOpenAPIImpl)
+import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class ToOpenAPI, toOpenAPIImpl, class CollectSchemas, collectSchemas, class CollectVariantSchemasRL, collectVariantSchemasRL, class CollectRouteSchemas, class CollectSchemaNames, class CollectVariantSchemaNames, class CollectRouteSchemaNames)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (class HasOperationMetadata, operationMetadata)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.HTTP.API.Route.Response (Response, class ToResponse)
+import Foreign.Object as FObject
 import Yoga.JSON (writeJSON)
 
 data Route :: forall k. Type -> k -> Type -> Row Type -> Type
@@ -107,3 +108,28 @@ instance
       , operation: toOpenAPIImpl (Proxy :: Proxy (Route method segments request resp))
       }
     ]
+
+-- CollectRouteSchemas instance for Route
+instance
+  ( DefaultRequestFields partialRequest reqHeaders encoding
+  , CollectSchemas encoding
+  , RowToList userResp rl
+  , CollectVariantSchemasRL rl
+  ) =>
+  CollectRouteSchemas (Route method segments (Request (Record partialRequest)) userResp) where
+  collectRouteSchemas _ =
+    let
+      requestSchemas = collectSchemas (Proxy :: Proxy encoding)
+      responseSchemas = collectVariantSchemasRL (Proxy :: Proxy rl)
+    in
+      FObject.union requestSchemas responseSchemas
+
+-- CollectRouteSchemaNames instance for Route (compile-time collision detection)
+instance
+  ( DefaultRequestFields partialRequest reqHeaders encoding
+  , CollectSchemaNames encoding reqNames
+  , RowToList userResp rl
+  , CollectVariantSchemaNames rl respNames
+  , Union reqNames respNames names
+  ) =>
+  CollectRouteSchemaNames (Route method segments (Request (Record partialRequest)) userResp) names

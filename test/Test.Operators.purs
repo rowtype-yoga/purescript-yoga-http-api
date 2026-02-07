@@ -8,6 +8,7 @@ import ParserTest.Spec as ParserTest
 import VariantResponseTest.Spec as VariantResponseTest
 import MetadataValidationTest.Spec as MetadataValidationTest
 import APIRecordTest.Spec as APIRecordTest
+import SchemaComponentTest.Spec as SchemaComponentTest
 
 spec :: Effect ViTest
 spec = do
@@ -36,7 +37,8 @@ spec = do
   _ <- APIRecordTest.testCollectOperations
   _ <- APIRecordTest.testOperationIds
   _ <- APIRecordTest.testBuildOpenAPISpec
-  APIRecordTest.testAPIHandlers
+  _ <- APIRecordTest.testAPIHandlers
+  SchemaComponentTest.testSchemaComponents
 
 main :: ViTest
 main = viTest spec

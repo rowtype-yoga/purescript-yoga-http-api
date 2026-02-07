@@ -45,6 +45,23 @@ module Yoga.HTTP.API.Route.OpenAPI
   , ServerObject
   , OpenAPISpec
   , ResponseHeaderObject
+  , class CollectSchemas
+  , collectSchemas
+  , class CollectSchemasRL
+  , collectSchemasRL
+  , class CollectVariantSchemasRL
+  , collectVariantSchemasRL
+  , class CollectRouteSchemas
+  , collectRouteSchemas
+  , class CollectRouteSchemasRL
+  , collectRouteSchemasRL
+  , class CollectSchemaNames
+  , class CollectSchemaNamesRL
+  , class CollectVariantSchemaNames
+  , class CollectRouteSchemaNames
+  , class CollectRouteSchemaNameRL
+  , class ValidateNoDuplicatesRL
+  , class ValidateSchemaNames
   ) where
 
 import Prelude
@@ -66,7 +83,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Route.BearerToken (BearerToken)
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, NoBody)
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
-import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasOperationMetadata, operationMetadata)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasOperationMetadata, operationMetadata)
 import Yoga.HTTP.API.Route.Response (class ToResponse)
 import Yoga.HTTP.API.Route.StatusCode (class StatusCodeMap, statusCodeFor, statusCodeToString)
 import Yoga.JSON (class WriteForeign, writeImpl)
@@ -604,6 +621,14 @@ instance (RenderJSONSchema a, HasEnum (Enum a)) => RenderJSONSchema (Enum a) whe
     in
       unsafeCoerce withEnum
 
+-- Schema wrapper: generates $ref instead of inline schema
+instance (IsSymbol name, RenderJSONSchema a) => RenderJSONSchema (Schema name a) where
+  renderJSONSchema _ =
+    let
+      schemaName = reflectSymbol (Proxy :: Proxy name)
+    in
+      unsafeCoerce $ FObject.singleton "$ref" (unsafeCoerce $ "#/components/schemas/" <> schemaName)
+
 -- Other metadata wrappers (Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Default)
 -- are similar but require more complex constraints, so we'll skip them for now in body schemas
 
@@ -864,6 +889,282 @@ toOpenAPI :: forall @a. ToOpenAPI a => String
 toOpenAPI = toOpenAPIImpl (Proxy :: Proxy a)
 
 --------------------------------------------------------------------------------
+-- CollectSchemas: Collect all Schema wrappers for component extraction
+--------------------------------------------------------------------------------
+
+-- | Collects all Schema wrappers found in a type and returns their definitions
+class CollectSchemas (ty :: Type) where
+  collectSchemas :: Proxy ty -> FObject.Object Foreign
+
+-- Base cases: primitives don't contain schemas
+instance CollectSchemas String where
+  collectSchemas _ = FObject.empty
+
+instance CollectSchemas Int where
+  collectSchemas _ = FObject.empty
+
+instance CollectSchemas Number where
+  collectSchemas _ = FObject.empty
+
+instance CollectSchemas Boolean where
+  collectSchemas _ = FObject.empty
+
+instance CollectSchemas Unit where
+  collectSchemas _ = FObject.empty
+
+-- Array: recurse into item type
+instance CollectSchemas a => CollectSchemas (Array a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- Maybe: recurse into inner type
+instance CollectSchemas a => CollectSchemas (Maybe a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- Record: recurse through all fields
+instance (RowToList row rl, CollectSchemasRL rl) => CollectSchemas (Record row) where
+  collectSchemas _ = collectSchemasRL (Proxy :: Proxy rl)
+
+-- JSON wrapper: unwrap and recurse
+instance CollectSchemas a => CollectSchemas (JSON a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- FormData wrapper: unwrap and recurse
+instance CollectSchemas a => CollectSchemas (FormData a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- NoBody: no schemas
+instance CollectSchemas NoBody where
+  collectSchemas _ = FObject.empty
+
+-- Schema wrapper: COLLECT THIS + recurse into inner type
+instance (IsSymbol name, RenderJSONSchema inner, CollectSchemas inner) => CollectSchemas (Schema name inner) where
+  collectSchemas _ =
+    let
+      schemaName = reflectSymbol (Proxy :: Proxy name)
+      -- Render the INNER type (not the Schema wrapper) for the component definition
+      innerSchema = renderJSONSchema (Proxy :: Proxy inner)
+      -- Also collect any nested schemas
+      nestedSchemas = collectSchemas (Proxy :: Proxy inner)
+    in
+      FObject.insert schemaName innerSchema nestedSchemas
+
+-- Metadata wrappers: recurse through to find schemas
+instance CollectSchemas a => CollectSchemas (Description desc a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Example ex a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Format fmt a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Minimum v a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Maximum v a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Pattern pat a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (MinLength v a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (MaxLength v a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Title t a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Nullable a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Default val a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Deprecated a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+instance CollectSchemas a => CollectSchemas (Enum a) where
+  collectSchemas _ = collectSchemas (Proxy :: Proxy a)
+
+-- | Helper class to collect schemas from record fields
+class CollectSchemasRL (rl :: RowList Type) where
+  collectSchemasRL :: Proxy rl -> FObject.Object Foreign
+
+instance CollectSchemasRL Nil where
+  collectSchemasRL _ = FObject.empty
+
+instance (IsSymbol name, CollectSchemas ty, CollectSchemasRL tail) => CollectSchemasRL (Cons name ty tail) where
+  collectSchemasRL _ =
+    let
+      fieldSchemas = collectSchemas (Proxy :: Proxy ty)
+      restSchemas = collectSchemasRL (Proxy :: Proxy tail)
+    in
+      FObject.union fieldSchemas restSchemas
+
+-- | Collects schemas from all response bodies in a variant
+class CollectVariantSchemasRL (rl :: RowList Type) where
+  collectVariantSchemasRL :: Proxy rl -> FObject.Object Foreign
+
+instance CollectVariantSchemasRL Nil where
+  collectVariantSchemasRL _ = FObject.empty
+
+instance
+  ( ToResponse recordType headers body
+  , CollectSchemas body
+  , CollectVariantSchemasRL tail
+  ) =>
+  CollectVariantSchemasRL (Cons label recordType tail) where
+  collectVariantSchemasRL _ =
+    let
+      bodySchemas = collectSchemas (Proxy :: Proxy body)
+      restSchemas = collectVariantSchemasRL (Proxy :: Proxy tail)
+    in
+      FObject.union bodySchemas restSchemas
+
+-- | Collects schemas from a route's request and response types
+class CollectRouteSchemas (route :: Type) where
+  collectRouteSchemas :: Proxy route -> FObject.Object Foreign
+
+-- | Helper class for collecting schemas from a record of routes
+class CollectRouteSchemasRL (rl :: RowList Type) where
+  collectRouteSchemasRL :: Proxy rl -> FObject.Object Foreign
+
+instance CollectRouteSchemasRL Nil where
+  collectRouteSchemasRL _ = FObject.empty
+
+instance
+  ( CollectRouteSchemas routeType
+  , CollectRouteSchemasRL tail
+  ) =>
+  CollectRouteSchemasRL (Cons label routeType tail) where
+  collectRouteSchemasRL _ =
+    let
+      routeSchemas = collectRouteSchemas (Proxy :: Proxy routeType)
+      restSchemas = collectRouteSchemasRL (Proxy :: Proxy tail)
+    in
+      FObject.union routeSchemas restSchemas
+
+-- Record instance: iterate record fields via RowList
+instance (RowToList row rl, CollectRouteSchemasRL rl) => CollectRouteSchemas (Record row) where
+  collectRouteSchemas _ = collectRouteSchemasRL (Proxy :: Proxy rl)
+
+--------------------------------------------------------------------------------
+-- CollectSchemaNames: Type-level collision detection
+--------------------------------------------------------------------------------
+
+-- | Collects schema names at the type level as a Row.
+-- | Used with Row.Union + Row.Nub to detect name collisions at compile time.
+-- | Two Schema wrappers with the same name but different types cause a compile error.
+class CollectSchemaNames (ty :: Type) (names :: Row Type) | ty -> names
+
+instance CollectSchemaNames String ()
+instance CollectSchemaNames Int ()
+instance CollectSchemaNames Number ()
+instance CollectSchemaNames Boolean ()
+instance CollectSchemaNames Unit ()
+
+instance CollectSchemaNames a names => CollectSchemaNames (Array a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Maybe a) names
+
+instance (RowToList row rl, CollectSchemaNamesRL rl names) => CollectSchemaNames (Record row) names
+
+instance CollectSchemaNames a names => CollectSchemaNames (JSON a) names
+instance CollectSchemaNames a names => CollectSchemaNames (FormData a) names
+instance CollectSchemaNames NoBody ()
+
+instance
+  ( CollectSchemaNames inner innerNames
+  , Row.Cons name inner innerNames names
+  , Row.Lacks name innerNames
+  ) =>
+  CollectSchemaNames (Schema name inner) names
+
+-- Metadata wrappers: recurse through
+instance CollectSchemaNames a names => CollectSchemaNames (Description desc a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Example ex a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Format fmt a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Minimum v a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Maximum v a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Pattern pat a) names
+instance CollectSchemaNames a names => CollectSchemaNames (MinLength v a) names
+instance CollectSchemaNames a names => CollectSchemaNames (MaxLength v a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Title t a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Nullable a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Default val a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Deprecated a) names
+instance CollectSchemaNames a names => CollectSchemaNames (Enum a) names
+
+-- | Helper class to collect schema names from record fields
+class CollectSchemaNamesRL (rl :: RowList Type) (names :: Row Type) | rl -> names
+
+instance CollectSchemaNamesRL Nil ()
+
+instance
+  ( CollectSchemaNames ty fieldNames
+  , CollectSchemaNamesRL tail tailNames
+  , Row.Union fieldNames tailNames names
+  ) =>
+  CollectSchemaNamesRL (Cons name ty tail) names
+
+-- | Collects schema names from all response bodies in a variant
+class CollectVariantSchemaNames (rl :: RowList Type) (names :: Row Type) | rl -> names
+
+instance CollectVariantSchemaNames Nil ()
+
+instance
+  ( ToResponse recordType headers body
+  , CollectSchemaNames body bodyNames
+  , CollectVariantSchemaNames tail tailNames
+  , Row.Union bodyNames tailNames names
+  ) =>
+  CollectVariantSchemaNames (Cons label recordType tail) names
+
+-- | Collects schema names from a route's request and response types
+class CollectRouteSchemaNames (route :: Type) (names :: Row Type) | route -> names
+
+-- | Helper for collecting schema names from a record of routes
+class CollectRouteSchemaNameRL (rl :: RowList Type) (names :: Row Type) | rl -> names
+
+instance CollectRouteSchemaNameRL Nil ()
+
+instance
+  ( CollectRouteSchemaNames routeType routeNames
+  , CollectRouteSchemaNameRL tail tailNames
+  , Row.Union routeNames tailNames names
+  ) =>
+  CollectRouteSchemaNameRL (Cons label routeType tail) names
+
+-- Record instance
+instance (RowToList row rl, CollectRouteSchemaNameRL rl names) => CollectRouteSchemaNames (Record row) names
+
+-- | Walks a RowList and checks each entry against the full row.
+-- | If the RowList has duplicate labels from Union, Cons will unify their types.
+-- | Same name + same type: Cons succeeds. Same name + different type: Cons fails.
+class ValidateNoDuplicatesRL (rl :: RowList Type) (full :: Row Type)
+
+instance ValidateNoDuplicatesRL Nil full
+
+instance
+  ( Row.Cons name ty _rest full
+  , ValidateNoDuplicatesRL tail full
+  ) =>
+  ValidateNoDuplicatesRL (Cons name ty tail) full
+
+-- | Validates that all Schema wrappers in a route collection have unique names.
+-- | Same name with same type is allowed (deduplication).
+-- | Same name with different types is a compile error.
+class ValidateSchemaNames (routes :: Type)
+
+instance
+  ( CollectRouteSchemaNames routes names
+  , RowToList names rl
+  , ValidateNoDuplicatesRL rl names
+  ) =>
+  ValidateSchemaNames routes
+
+--------------------------------------------------------------------------------
 -- CollectOperations: Walk a type-level structure of routes
 --------------------------------------------------------------------------------
 
@@ -972,6 +1273,8 @@ type ServerObject =
 buildOpenAPISpec
   :: forall @routes
    . CollectOperations routes
+  => CollectRouteSchemas routes
+  => ValidateSchemaNames routes
   => { title :: String, version :: String }
   -> OpenAPISpec
 buildOpenAPISpec info = buildOpenAPISpec' @routes info { servers: Nothing }
@@ -980,6 +1283,8 @@ buildOpenAPISpec info = buildOpenAPISpec' @routes info { servers: Nothing }
 buildOpenAPISpec'
   :: forall @routes
    . CollectOperations routes
+  => CollectRouteSchemas routes
+  => ValidateSchemaNames routes
   => { title :: String, version :: String }
   -> { servers :: Maybe (Array ServerObject) }
   -> OpenAPISpec
@@ -988,9 +1293,15 @@ buildOpenAPISpec' info config =
     ops = collectOperations (Proxy :: Proxy routes)
     paths = groupByPath ops
     securitySchemes = buildSecuritySchemes ops
+    schemas = collectRouteSchemas (Proxy :: Proxy routes)
+
+    -- Build components object with both schemas and securitySchemes
     components =
-      if FObject.isEmpty securitySchemes then Nothing
-      else Just { securitySchemes }
+      if FObject.isEmpty schemas && FObject.isEmpty securitySchemes then Nothing
+      else Just $ unsafeCoerce $ FObject.fromFoldable $
+        (if FObject.isEmpty schemas then [] else [ Tuple "schemas" (unsafeCoerce schemas) ])
+          <> (if FObject.isEmpty securitySchemes then [] else [ Tuple "securitySchemes" (unsafeCoerce securitySchemes) ])
+
     baseSpec = FObject.fromFoldable
       [ Tuple "openapi" (unsafeCoerce "3.0.0")
       , Tuple "info" (unsafeCoerce { title: info.title, version: info.version })
@@ -998,7 +1309,7 @@ buildOpenAPISpec' info config =
       ]
     withComponents = case components of
       Nothing -> baseSpec
-      Just c -> FObject.insert "components" (unsafeCoerce c) baseSpec
+      Just c -> FObject.insert "components" c baseSpec
     withServers = case config.servers of
       Nothing -> withComponents
       Just servers -> FObject.insert "servers" (writeImpl servers) withComponents

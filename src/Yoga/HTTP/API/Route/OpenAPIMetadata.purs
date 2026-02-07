@@ -43,6 +43,7 @@ module Yoga.HTTP.API.Route.OpenAPIMetadata
   , Default
   , Deprecated
   , Enum
+  , Schema
   ) where
 
 import Prelude
@@ -140,6 +141,15 @@ data Deprecated a
 data Enum :: Type -> Type
 data Enum a
 
+-- | Mark a type to be extracted as an OpenAPI component schema with $ref.
+-- | When used in request/response bodies, generates a reference instead of inline schema.
+-- |
+-- | Example:
+-- |   type User = { id :: Int, name :: String }
+-- |   Route POST path (Request { body :: JSON (Schema "User" User) }) (ok :: { body :: Schema "User" User })
+data Schema :: Symbol -> Type -> Type
+data Schema name a
+
 --------------------------------------------------------------------------------
 -- Metadata Extraction Typeclasses
 --
@@ -180,6 +190,8 @@ else instance HasDescription a => HasDescription (Deprecated a) where
   description _ = description (Proxy :: Proxy a)
 else instance HasDescription a => HasDescription (Enum a) where
   description _ = description (Proxy :: Proxy a)
+else instance HasDescription a => HasDescription (Schema name a) where
+  description _ = description (Proxy :: Proxy a)
 else instance HasDescription ty where
   description _ = Nothing
 
@@ -212,6 +224,8 @@ else instance HasExample a => HasExample (Default val a) where
 else instance HasExample a => HasExample (Deprecated a) where
   example _ = example (Proxy :: Proxy a)
 else instance HasExample a => HasExample (Enum a) where
+  example _ = example (Proxy :: Proxy a)
+else instance HasExample a => HasExample (Schema name a) where
   example _ = example (Proxy :: Proxy a)
 else instance HasExample ty where
   example _ = Nothing
@@ -246,6 +260,8 @@ else instance HasFormat a => HasFormat (Deprecated a) where
   format _ = format (Proxy :: Proxy a)
 else instance HasFormat a => HasFormat (Enum a) where
   format _ = format (Proxy :: Proxy a)
+else instance HasFormat a => HasFormat (Schema name a) where
+  format _ = format (Proxy :: Proxy a)
 else instance HasFormat ty where
   format _ = Nothing
 
@@ -278,6 +294,8 @@ else instance HasMinimum a => HasMinimum (Default val a) where
 else instance HasMinimum a => HasMinimum (Deprecated a) where
   minimum _ = minimum (Proxy :: Proxy a)
 else instance HasMinimum a => HasMinimum (Enum a) where
+  minimum _ = minimum (Proxy :: Proxy a)
+else instance HasMinimum a => HasMinimum (Schema name a) where
   minimum _ = minimum (Proxy :: Proxy a)
 else instance HasMinimum ty where
   minimum _ = Nothing
@@ -312,6 +330,8 @@ else instance HasMaximum a => HasMaximum (Deprecated a) where
   maximum _ = maximum (Proxy :: Proxy a)
 else instance HasMaximum a => HasMaximum (Enum a) where
   maximum _ = maximum (Proxy :: Proxy a)
+else instance HasMaximum a => HasMaximum (Schema name a) where
+  maximum _ = maximum (Proxy :: Proxy a)
 else instance HasMaximum ty where
   maximum _ = Nothing
 
@@ -344,6 +364,8 @@ else instance HasPattern a => HasPattern (Default val a) where
 else instance HasPattern a => HasPattern (Deprecated a) where
   pattern _ = pattern (Proxy :: Proxy a)
 else instance HasPattern a => HasPattern (Enum a) where
+  pattern _ = pattern (Proxy :: Proxy a)
+else instance HasPattern a => HasPattern (Schema name a) where
   pattern _ = pattern (Proxy :: Proxy a)
 else instance HasPattern ty where
   pattern _ = Nothing
@@ -378,6 +400,8 @@ else instance HasMinLength a => HasMinLength (Deprecated a) where
   minLength _ = minLength (Proxy :: Proxy a)
 else instance HasMinLength a => HasMinLength (Enum a) where
   minLength _ = minLength (Proxy :: Proxy a)
+else instance HasMinLength a => HasMinLength (Schema name a) where
+  minLength _ = minLength (Proxy :: Proxy a)
 else instance HasMinLength ty where
   minLength _ = Nothing
 
@@ -410,6 +434,8 @@ else instance HasMaxLength a => HasMaxLength (Default val a) where
 else instance HasMaxLength a => HasMaxLength (Deprecated a) where
   maxLength _ = maxLength (Proxy :: Proxy a)
 else instance HasMaxLength a => HasMaxLength (Enum a) where
+  maxLength _ = maxLength (Proxy :: Proxy a)
+else instance HasMaxLength a => HasMaxLength (Schema name a) where
   maxLength _ = maxLength (Proxy :: Proxy a)
 else instance HasMaxLength ty where
   maxLength _ = Nothing
@@ -444,6 +470,8 @@ else instance HasTitle a => HasTitle (Deprecated a) where
   title _ = title (Proxy :: Proxy a)
 else instance HasTitle a => HasTitle (Enum a) where
   title _ = title (Proxy :: Proxy a)
+else instance HasTitle a => HasTitle (Schema name a) where
+  title _ = title (Proxy :: Proxy a)
 else instance HasTitle ty where
   title _ = Nothing
 
@@ -476,6 +504,8 @@ else instance HasNullable a => HasNullable (Default val a) where
 else instance HasNullable a => HasNullable (Deprecated a) where
   nullable _ = nullable (Proxy :: Proxy a)
 else instance HasNullable a => HasNullable (Enum a) where
+  nullable _ = nullable (Proxy :: Proxy a)
+else instance HasNullable a => HasNullable (Schema name a) where
   nullable _ = nullable (Proxy :: Proxy a)
 else instance HasNullable ty where
   nullable _ = false
@@ -510,6 +540,8 @@ else instance HasDefault a => HasDefault (Deprecated a) where
   default _ = default (Proxy :: Proxy a)
 else instance HasDefault a => HasDefault (Enum a) where
   default _ = default (Proxy :: Proxy a)
+else instance HasDefault a => HasDefault (Schema name a) where
+  default _ = default (Proxy :: Proxy a)
 else instance HasDefault ty where
   default _ = Nothing
 
@@ -542,6 +574,8 @@ else instance HasDeprecated a => HasDeprecated (Nullable a) where
 else instance HasDeprecated a => HasDeprecated (Default val a) where
   deprecated _ = deprecated (Proxy :: Proxy a)
 else instance HasDeprecated a => HasDeprecated (Enum a) where
+  deprecated _ = deprecated (Proxy :: Proxy a)
+else instance HasDeprecated a => HasDeprecated (Schema name a) where
   deprecated _ = deprecated (Proxy :: Proxy a)
 else instance HasDeprecated ty where
   deprecated _ = false
@@ -591,6 +625,8 @@ else instance HasEnum a => HasEnum (Nullable a) where
 else instance HasEnum a => HasEnum (Default val a) where
   enum _ = enum (Proxy :: Proxy a)
 else instance HasEnum a => HasEnum (Deprecated a) where
+  enum _ = enum (Proxy :: Proxy a)
+else instance HasEnum a => HasEnum (Schema name a) where
   enum _ = enum (Proxy :: Proxy a)
 else instance HasEnum ty where
   enum _ = Nothing
@@ -707,6 +743,10 @@ instance HeaderValue a => HeaderValue (Enum a) where
   parseHeader s = unsafeCoerce (parseHeader s :: Either String a)
   printHeader x = printHeader (unsafeCoerce x :: a)
 
+instance HeaderValue a => HeaderValue (Schema name a) where
+  parseHeader s = unsafeCoerce (parseHeader s :: Either String a)
+  printHeader x = printHeader (unsafeCoerce x :: a)
+
 -- HeaderValueType instances
 instance HeaderValueType a => HeaderValueType (Description desc a) where
   headerValueType _ = headerValueType (Proxy :: Proxy a)
@@ -745,6 +785,9 @@ instance HeaderValueType a => HeaderValueType (Deprecated a) where
   headerValueType _ = headerValueType (Proxy :: Proxy a)
 
 instance HeaderValueType a => HeaderValueType (Enum a) where
+  headerValueType _ = headerValueType (Proxy :: Proxy a)
+
+instance HeaderValueType a => HeaderValueType (Schema name a) where
   headerValueType _ = headerValueType (Proxy :: Proxy a)
 
 -- ParseParam instances
@@ -815,6 +858,9 @@ instance ParseParam a => ParseParam (Deprecated a) where
 instance ParseParam a => ParseParam (Enum a) where
   parseParam s = unsafeCoerce (parseParam s :: Either String a)
 
+instance ParseParam a => ParseParam (Schema name a) where
+  parseParam s = unsafeCoerce (parseParam s :: Either String a)
+
 -- WriteForeign instances
 instance WriteForeign a => WriteForeign (Description desc a) where
   writeImpl x = writeImpl (unsafeCoerce x :: a)
@@ -855,6 +901,9 @@ instance WriteForeign a => WriteForeign (Deprecated a) where
 instance WriteForeign a => WriteForeign (Enum a) where
   writeImpl x = writeImpl (unsafeCoerce x :: a)
 
+instance WriteForeign a => WriteForeign (Schema name a) where
+  writeImpl x = writeImpl (unsafeCoerce x :: a)
+
 -- ReadForeign instances
 instance ReadForeign a => ReadForeign (Description desc a) where
   readImpl = unsafeCoerce (readImpl :: Foreign -> _ a)
@@ -893,4 +942,7 @@ instance ReadForeign a => ReadForeign (Deprecated a) where
   readImpl = unsafeCoerce (readImpl :: Foreign -> _ a)
 
 instance ReadForeign a => ReadForeign (Enum a) where
+  readImpl = unsafeCoerce (readImpl :: Foreign -> _ a)
+
+instance ReadForeign a => ReadForeign (Schema name a) where
   readImpl = unsafeCoerce (readImpl :: Foreign -> _ a)

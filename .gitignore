@@ -1,5 +1,7 @@
 .spago
 output
 output-compile-fail
+output-test
 node_modules
 .purs-repl
+.psc-ide-port

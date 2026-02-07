@@ -1,4 +1,4 @@
-module Test.ParserTest where
+module Test.ParserTestFixtures where
 
 import Prelude
 

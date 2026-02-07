@@ -1,4 +1,4 @@
-module CookieAuthTest.Spec where
+module Test.CookieAuthTest where
 
 import Prelude
 

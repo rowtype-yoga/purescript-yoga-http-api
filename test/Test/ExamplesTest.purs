@@ -1,4 +1,4 @@
-module ExamplesTest.Spec where
+module Test.ExamplesTest where
 
 import Prelude
 

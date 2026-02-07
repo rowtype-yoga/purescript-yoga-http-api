@@ -1,4 +1,4 @@
-module Test.OperatorTest where
+module Test.OperatorTestFixtures where
 
 import Prelude
 

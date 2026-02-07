@@ -1,4 +1,4 @@
-module MetadataValidationTest.Spec where
+module Test.MetadataValidationTest where
 
 import Prelude
 

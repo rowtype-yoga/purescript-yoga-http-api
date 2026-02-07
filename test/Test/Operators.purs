@@ -3,18 +3,18 @@ module Test.Operators where
 import Prelude
 import Effect (Effect)
 import ViTest (ViTest, viTest)
-import OperatorTest.Spec as OperatorTest
-import ParserTest.Spec as ParserTest
-import VariantResponseTest.Spec as VariantResponseTest
-import MetadataValidationTest.Spec as MetadataValidationTest
-import APIRecordTest.Spec as APIRecordTest
-import SchemaComponentTest.Spec as SchemaComponentTest
-import BearerAuthTest.Spec as BearerAuthTest
--- import CallbackTest.Spec as CallbackTest
-import CookieAuthTest.Spec as CookieAuthTest
-import OpenAPIInfoTest.Spec as OpenAPIInfoTest
-import ContentTypeTest.Spec as ContentTypeTest
-import ExamplesTest.Spec as ExamplesTest
+import Test.OperatorTest as OperatorTest
+import Test.ParserTest as ParserTest
+import Test.VariantResponseTest as VariantResponseTest
+import Test.MetadataValidationTest as MetadataValidationTest
+import Test.APIRecordTest as APIRecordTest
+import Test.SchemaComponentTest as SchemaComponentTest
+import Test.BearerAuthTest as BearerAuthTest
+-- import Test.CallbackTest as CallbackTest
+import Test.CookieAuthTest as CookieAuthTest
+import Test.OpenAPIInfoTest as OpenAPIInfoTest
+import Test.ContentTypeTest as ContentTypeTest
+import Test.ExamplesTest as ExamplesTest
 
 spec :: Effect ViTest
 spec = do

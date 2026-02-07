@@ -1,4 +1,4 @@
-module APIRecordTest.Spec where
+module Test.APIRecordTest where
 
 import Prelude
 

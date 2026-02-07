@@ -1,4 +1,4 @@
-module ContentTypeTest.Spec where
+module Test.ContentTypeTest where
 
 import Prelude
 

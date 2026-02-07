@@ -1,4 +1,4 @@
-module VariantResponseTest.Spec where
+module Test.VariantResponseTest where
 
 import Prelude
 

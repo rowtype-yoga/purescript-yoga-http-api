@@ -1,4 +1,4 @@
-module BearerAuthTest.Spec where
+module Test.BearerAuthTest where
 
 import Prelude
 

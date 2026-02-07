@@ -1,0 +1,260 @@
+module Test.CallbackTest where
+
+import Prelude
+
+import Data.Maybe (Maybe(..))
+import Data.String as String
+import Effect (Effect)
+import Type.Proxy (Proxy(..))
+import Yoga.HTTP.API.Path (Path, Lit)
+import Yoga.HTTP.API.Route (GET, POST, Route, Request, buildOpenAPISpec, toOpenAPI)
+import Yoga.HTTP.API.Route.Encoding (JSON)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (Callback, type (#))
+import Yoga.JSON (writeJSON)
+import ViTest (ViTest, describe, test)
+import ViTest.Expect (expectToBe)
+
+--------------------------------------------------------------------------------
+-- Type Definitions for Callback Tests
+--------------------------------------------------------------------------------
+
+-- Payment processing with callback for completion notification
+type PaymentRequest = { amount :: Int, currency :: String, callbackUrl :: String }
+type PaymentResponse = { transactionId :: String, status :: String }
+type PaymentCallbackRequest = { status :: String, transactionId :: String }
+type PaymentCallbackResponse = { received :: Boolean }
+
+type PaymentRoute =
+  Route POST (Path (Lit "payment"))
+    (Request { body :: JSON PaymentRequest })
+    ( ok :: { body :: PaymentResponse }
+    ) # Callback "onPaymentComplete" "{$request.body#/callbackUrl}" POST
+    (JSON PaymentCallbackRequest)
+    (ok :: { body :: PaymentCallbackResponse })
+
+-- Webhook subscription with multiple callbacks
+type WebhookSubscription = { url :: String, events :: Array String }
+type WebhookEvent = { event :: String, data :: String, timestamp :: String }
+type WebhookAck = { acknowledged :: Boolean }
+
+type WebhookRoute =
+  Route POST (Path (Lit "webhooks"))
+    (Request { body :: JSON WebhookSubscription })
+    ( created :: { body :: { id :: String } }
+    )
+    # Callback "onUserCreated" "{$request.body#/url}" POST
+        (JSON WebhookEvent)
+        ( ok :: { body :: WebhookAck }
+        , badRequest :: { body :: { error :: String } }
+        )
+    # Callback "onUserUpdated" "{$request.body#/url}" POST
+        (JSON WebhookEvent)
+        (ok :: { body :: WebhookAck })
+
+-- Async job processing with status callback
+type JobRequest = { task :: String, statusUrl :: String }
+type JobResponse = { jobId :: String }
+type JobStatusUpdate = { jobId :: String, status :: String, progress :: Int }
+type StatusAck = { received :: Boolean }
+
+type AsyncJobRoute =
+  Route POST (Path (Lit "jobs"))
+    (Request { body :: JSON JobRequest })
+    ( accepted :: { body :: JobResponse }
+    ) # Callback "onStatusUpdate" "{$request.body#/statusUrl}" POST
+    (JSON JobStatusUpdate)
+    (ok :: { body :: StatusAck })
+
+-- Notification service with GET callback
+type NotificationRequest = { message :: String, confirmUrl :: String }
+type NotificationResponse = { notificationId :: String }
+
+type NotificationRoute =
+  Route POST (Path (Lit "notifications"))
+    (Request { body :: JSON NotificationRequest })
+    ( created :: { body :: NotificationResponse }
+    ) # Callback "onDeliveryConfirm" "{$request.body#/confirmUrl}" GET
+    (JSON { delivered :: Boolean })
+    (ok :: { body :: { confirmed :: Boolean } })
+
+--------------------------------------------------------------------------------
+-- Basic Callback Tests
+--------------------------------------------------------------------------------
+
+testPaymentCallback :: Effect ViTest
+testPaymentCallback = describe "OpenAPI Callbacks - Payment Processing" do
+  _ <- test "includes callbacks in operation" do
+    let
+      result = toOpenAPI @PaymentRoute
+    expectToBe true (String.contains (String.Pattern "callbacks") result)
+
+  _ <- test "includes callback name onPaymentComplete" do
+    let
+      result = toOpenAPI @PaymentRoute
+    expectToBe true (String.contains (String.Pattern "onPaymentComplete") result)
+
+  _ <- test "includes callback expression with runtime reference" do
+    let
+      result = toOpenAPI @PaymentRoute
+    expectToBe true (String.contains (String.Pattern "{$request.body#/callbackUrl}") result)
+
+  _ <- test "includes callback method POST" do
+    let
+      result = toOpenAPI @PaymentRoute
+    expectToBe true (String.contains (String.Pattern "\"post\"") result)
+
+  _ <- test "includes callback request body schema" do
+    let
+      result = toOpenAPI @PaymentRoute
+    expectToBe true (String.contains (String.Pattern "status") result)
+    expectToBe true (String.contains (String.Pattern "transactionId") result)
+
+  test "includes callback response schema" do
+    let
+      result = toOpenAPI @PaymentRoute
+    expectToBe true (String.contains (String.Pattern "received") result)
+
+--------------------------------------------------------------------------------
+-- Multiple Callbacks Tests
+--------------------------------------------------------------------------------
+
+testMultipleCallbacks :: Effect ViTest
+testMultipleCallbacks = describe "OpenAPI Callbacks - Multiple Webhooks" do
+  _ <- test "includes multiple callback definitions" do
+    let
+      result = toOpenAPI @WebhookRoute
+    expectToBe true (String.contains (String.Pattern "onUserCreated") result)
+    expectToBe true (String.contains (String.Pattern "onUserUpdated") result)
+
+  _ <- test "each callback has its own expression" do
+    let
+      result = toOpenAPI @WebhookRoute
+    expectToBe true (String.contains (String.Pattern "{$request.body#/url}") result)
+
+  test "callbacks with multiple response types" do
+    let
+      result = toOpenAPI @WebhookRoute
+    expectToBe true (String.contains (String.Pattern "\"200\"") result)
+    expectToBe true (String.contains (String.Pattern "\"400\"") result)
+
+--------------------------------------------------------------------------------
+-- Different HTTP Methods Tests
+--------------------------------------------------------------------------------
+
+testCallbackMethods :: Effect ViTest
+testCallbackMethods = describe "OpenAPI Callbacks - HTTP Methods" do
+  _ <- test "supports POST callback method" do
+    let
+      result = toOpenAPI @AsyncJobRoute
+    expectToBe true (String.contains (String.Pattern "onStatusUpdate") result)
+    expectToBe true (String.contains (String.Pattern "\"post\"") result)
+
+  test "supports GET callback method" do
+    let
+      result = toOpenAPI @NotificationRoute
+    expectToBe true (String.contains (String.Pattern "onDeliveryConfirm") result)
+    expectToBe true (String.contains (String.Pattern "\"get\"") result)
+
+--------------------------------------------------------------------------------
+-- API Spec with Callbacks
+--------------------------------------------------------------------------------
+
+type CallbackAPI =
+  { payment :: PaymentRoute
+  , webhook :: WebhookRoute
+  , job :: AsyncJobRoute
+  , notification :: NotificationRoute
+  }
+
+testAPISpecWithCallbacks :: Effect ViTest
+testAPISpecWithCallbacks = describe "OpenAPI Spec - API with Callbacks" do
+  _ <- test "builds complete spec with callback operations" do
+    let
+      spec = buildOpenAPISpec @CallbackAPI
+        { title: "Callback Test API"
+        , version: "1.0.0"
+        , description: Nothing
+        , contact: Nothing
+        , license: Nothing
+        }
+      json = writeJSON spec
+    expectToBe true (String.contains (String.Pattern "callbacks") json)
+
+  _ <- test "includes all callback operations in spec" do
+    let
+      spec = buildOpenAPISpec @CallbackAPI
+        { title: "Callback Test API"
+        , version: "1.0.0"
+        , description: Nothing
+        , contact: Nothing
+        , license: Nothing
+        }
+      json = writeJSON spec
+    expectToBe true (String.contains (String.Pattern "onPaymentComplete") json)
+    expectToBe true (String.contains (String.Pattern "onUserCreated") json)
+    expectToBe true (String.contains (String.Pattern "onStatusUpdate") json)
+    expectToBe true (String.contains (String.Pattern "onDeliveryConfirm") json)
+
+  test "callback expressions use runtime references" do
+    let
+      spec = buildOpenAPISpec @CallbackAPI
+        { title: "Callback Test API"
+        , version: "1.0.0"
+        , description: Nothing
+        , contact: Nothing
+        , license: Nothing
+        }
+      json = writeJSON spec
+    expectToBe true (String.contains (String.Pattern "{$request.body#/callbackUrl}") json)
+    expectToBe true (String.contains (String.Pattern "{$request.body#/url}") json)
+    expectToBe true (String.contains (String.Pattern "{$request.body#/statusUrl}") json)
+    expectToBe true (String.contains (String.Pattern "{$request.body#/confirmUrl}") json)
+
+--------------------------------------------------------------------------------
+-- Real-World Webhook Scenarios
+--------------------------------------------------------------------------------
+
+-- GitHub-style webhook
+type GitHubWebhookSetup = { url :: String, secret :: String }
+type GitHubPushEvent = { ref :: String, commits :: Array { message :: String } }
+
+type GitHubWebhookRoute =
+  Route POST (Path (Lit "github" /\ Lit "webhooks"))
+    (Request { body :: JSON GitHubWebhookSetup })
+    ( created :: { body :: { id :: Int } }
+    ) # Callback "push" "{$request.body#/url}" POST
+    (JSON GitHubPushEvent)
+    (ok :: { body :: Unit })
+
+-- Stripe-style payment webhook
+type StripeCheckout = { successUrl :: String, cancelUrl :: String }
+type StripeEvent = { type :: String, data :: { amount :: Int } }
+
+type StripeWebhookRoute =
+  Route POST (Path (Lit "stripe" /\ Lit "checkout"))
+    (Request { body :: JSON StripeCheckout })
+    ( ok :: { body :: { sessionId :: String } }
+    )
+    # Callback "checkout.completed" "{$request.body#/successUrl}" POST
+        (JSON StripeEvent)
+        (ok :: { body :: Unit })
+    # Callback "checkout.canceled" "{$request.body#/cancelUrl}" POST
+        (JSON StripeEvent)
+        (ok :: { body :: Unit })
+
+testRealWorldWebhooks :: Effect ViTest
+testRealWorldWebhooks = describe "OpenAPI Callbacks - Real-World Webhooks" do
+  _ <- test "GitHub-style webhook with push callback" do
+    let
+      result = toOpenAPI @GitHubWebhookRoute
+    expectToBe true (String.contains (String.Pattern "push") result)
+    expectToBe true (String.contains (String.Pattern "ref") result)
+    expectToBe true (String.contains (String.Pattern "commits") result)
+
+  test "Stripe-style webhook with success and cancel callbacks" do
+    let
+      result = toOpenAPI @StripeWebhookRoute
+    expectToBe true (String.contains (String.Pattern "checkout.completed") result)
+    expectToBe true (String.contains (String.Pattern "checkout.canceled") result)
+    expectToBe true (String.contains (String.Pattern "{$request.body#/successUrl}") result)
+    expectToBe true (String.contains (String.Pattern "{$request.body#/cancelUrl}") result)

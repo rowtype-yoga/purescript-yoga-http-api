@@ -284,6 +284,8 @@ class HasExample ty where
 
 instance IsSymbol ex => HasExample (Example ex a) where
   example _ = Just (reflectSymbol (Proxy :: Proxy ex))
+else instance HasExample a => HasExample (Examples examplesRow a) where
+  example _ = example (Proxy :: Proxy a)
 else instance HasExample a => HasExample (Description desc a) where
   example _ = example (Proxy :: Proxy a)
 else instance HasExample a => HasExample (Format fmt a) where

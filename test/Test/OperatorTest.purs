@@ -1,10 +1,10 @@
-module OperatorTest.Spec where
+module Test.OperatorTest where
 
 import Prelude
 
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Test.OperatorTest as Op
+import Test.OperatorTestFixtures as Op
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (Path, type (/), type (:), type (:?))
 import ViTest (ViTest, describe, test)

@@ -1,4 +1,4 @@
-module SchemaComponentTest.Spec where
+module Test.SchemaComponentTest where
 
 import Prelude
 

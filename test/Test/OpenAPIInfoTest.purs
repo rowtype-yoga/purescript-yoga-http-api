@@ -1,4 +1,4 @@
-module OpenAPIInfoTest.Spec where
+module Test.OpenAPIInfoTest where
 
 import Prelude
 

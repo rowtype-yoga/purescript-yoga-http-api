@@ -2,6 +2,7 @@ module Test.BearerAuthTest where
 
 import Prelude
 
+import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
@@ -9,6 +10,7 @@ import Yoga.HTTP.API.Path (Path, Lit)
 import Yoga.HTTP.API.Route (GET, Route, Request, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, DigestAuth)
 import Yoga.JSON (writeJSON)
+import Test.OpenAPIValidation (validate)
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)
 
@@ -56,11 +58,16 @@ testBearerTokenAuth = describe "BearerToken Authentication" do
     let hasBearerAuth = String.contains (String.Pattern "bearerAuth") json
     expectToBe true hasBearerAuth
 
-  test "BearerToken security scheme has correct structure" do
+  _ <- test "BearerToken security scheme has correct structure" do
     let spec = buildOpenAPISpec @BearerAuthAPI { title: "Auth API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
     let json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"type\":\"http\"") json)
     expectToBe true (String.contains (String.Pattern "\"scheme\":\"bearer\"") json)
+
+  test "BearerToken API generates valid OpenAPI 3.0 schema" do
+    let spec = buildOpenAPISpec @BearerAuthAPI { title: "Auth API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+    let result = validate spec
+    expectToBe true (Array.null result.errors)
 
 testBasicAuth :: Effect ViTest
 testBasicAuth = describe "BasicAuth Authentication" do

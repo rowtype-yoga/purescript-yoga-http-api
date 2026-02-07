@@ -99,6 +99,7 @@ buildSchema
   :: { type :: String
      , format :: Maybe String
      , example :: Maybe String
+     , examples :: Maybe (FObject.Object Foreign)
      , minimum :: Maybe Int
      , maximum :: Maybe Int
      , pattern :: Maybe String
@@ -140,20 +141,28 @@ buildParameter
      , schema :: Foreign
      , description :: Maybe String
      , deprecated :: Maybe Boolean
+     , examples :: Maybe (FObject.Object Foreign)
      }
   -> Foreign
-buildParameter { name, in: inStr, required, schema, description: descMaybe, deprecated: deprecatedMaybe } =
+buildParameter { name, in: inStr, required, schema, description: descMaybe, deprecated: deprecatedMaybe, examples: examplesMaybe } =
   let
+    ins :: forall a. String -> a -> FObject.Object Foreign -> FObject.Object Foreign
+    ins key val obj = FObject.insert key (unsafeCoerce val) obj
+
+    insMaybe :: forall a. String -> Maybe a -> FObject.Object Foreign -> FObject.Object Foreign
+    insMaybe key valMaybe obj = maybe obj (\v -> ins key v obj) valMaybe
+
     base = FObject.fromFoldable
       [ Tuple "name" (unsafeCoerce name)
       , Tuple "in" (unsafeCoerce inStr)
       , Tuple "required" (unsafeCoerce required)
       , Tuple "schema" schema
       ]
-    withDesc = maybe base (\d -> FObject.insert "description" (unsafeCoerce d) base) descMaybe
-    withDeprecated = maybe withDesc (\dep -> FObject.insert "deprecated" (unsafeCoerce dep) withDesc) deprecatedMaybe
   in
-    unsafeCoerce withDeprecated
+    unsafeCoerce $ base
+      # insMaybe "description" descMaybe
+      # insMaybe "deprecated" deprecatedMaybe
+      # insMaybe "examples" examplesMaybe
 
 --------------------------------------------------------------------------------
 -- OpenAPI Generation
@@ -266,6 +275,7 @@ else instance
         { type: headerValueType p
         , format: format p
         , example: example p
+        , examples: Nothing
         , minimum: minimum p
         , maximum: maximum p
         , pattern: pattern p
@@ -283,6 +293,8 @@ else instance
         , schema
         , description: description p
         , deprecated: if deprecated p then Just true else Nothing
+        , examples: Nothing
+
         }
       rest = renderHeadersSchemaRL (Proxy :: Proxy tail)
     in
@@ -491,6 +503,7 @@ instance
         { type: headerValueType p
         , format: format p
         , example: example p
+        , examples: Nothing
         , minimum: minimum p
         , maximum: maximum p
         , pattern: pattern p
@@ -508,6 +521,8 @@ instance
         , schema
         , description: description p
         , deprecated: if deprecated p then Just true else Nothing
+        , examples: Nothing
+
         }
       rest = renderPathParamsSchemaRL (Proxy :: Proxy tail)
     in
@@ -560,6 +575,7 @@ instance
         { type: headerValueType p
         , format: format p
         , example: example p
+        , examples: Nothing
         , minimum: minimum p
         , maximum: maximum p
         , pattern: pattern p
@@ -577,6 +593,8 @@ instance
         , schema
         , description: description p
         , deprecated: if deprecated p then Just true else Nothing
+        , examples: Nothing
+
         }
       rest = renderQueryParamsSchemaRL (Proxy :: Proxy tail)
     in
@@ -595,6 +613,7 @@ instance RenderJSONSchema String where
   renderJSONSchema _ = buildSchema
     { type: "string"
     , format: Nothing
+    , examples: Nothing
     , example: Nothing
     , minimum: Nothing
     , maximum: Nothing
@@ -611,6 +630,7 @@ instance RenderJSONSchema Int where
   renderJSONSchema _ = buildSchema
     { type: "integer"
     , format: Nothing
+    , examples: Nothing
     , example: Nothing
     , minimum: Nothing
     , maximum: Nothing
@@ -627,6 +647,7 @@ instance RenderJSONSchema Number where
   renderJSONSchema _ = buildSchema
     { type: "number"
     , format: Nothing
+    , examples: Nothing
     , example: Nothing
     , minimum: Nothing
     , maximum: Nothing
@@ -643,6 +664,7 @@ instance RenderJSONSchema Boolean where
   renderJSONSchema _ = buildSchema
     { type: "boolean"
     , format: Nothing
+    , examples: Nothing
     , example: Nothing
     , minimum: Nothing
     , maximum: Nothing
@@ -659,6 +681,7 @@ instance renderJSONSchemaUnit :: RenderJSONSchema Unit where
   renderJSONSchema _ = buildSchema
     { type: "null"
     , format: Nothing
+    , examples: Nothing
     , example: Nothing
     , minimum: Nothing
     , maximum: Nothing
@@ -1029,6 +1052,15 @@ instance renderVariantResponseSchemaRLCons ::
       statusCodeStr = statusCodeToString statusCode
       headersObj = renderResponseHeadersSchema (Proxy :: Proxy headers)
       bodySchema = renderJSONSchema (Proxy :: Proxy body)
+      -- TODO: Links support (incomplete feature)
+      -- linksArray = links (Proxy :: Proxy recordType)
+      -- linksObj =
+      --   if Array.null linksArray then Nothing
+      --   else Just $ FObject.fromFoldable $ linksArray <#> \link ->
+      --     Tuple link.name $ unsafeCoerce $ FObject.fromFoldable
+      --       [ Tuple "operationId" (unsafeCoerce link.operationId)
+      --       , Tuple "parameters" link.parameters
+      --       ]
       responseObj =
         { description: "Successful response"
         , headers: headersObj

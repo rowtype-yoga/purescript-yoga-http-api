@@ -44,6 +44,7 @@ module Yoga.HTTP.API.Route.OpenAPIMetadata
   , Deprecated
   , Enum
   , Schema
+  , Callback
   ) where
 
 import Prelude
@@ -149,6 +150,27 @@ data Enum a
 -- |   Route POST path (Request { body :: JSON (Schema "User" User) }) (ok :: { body :: Schema "User" User })
 data Schema :: Symbol -> Type -> Type
 data Schema name a
+
+-- | Define an OpenAPI callback for webhook/asynchronous API patterns.
+-- | Callbacks allow you to define outgoing requests that your API will make to the client.
+-- |
+-- | Parameters:
+-- |   name - The callback identifier (e.g., "onPaymentComplete")
+-- |   expression - The URL with runtime expressions (e.g., "{$request.body#/callbackUrl}")
+-- |   method - The HTTP method type for the callback (GET, POST, etc.)
+-- |   requestBody - The request body type for the callback
+-- |   responseRow - The response variants row for the callback
+-- |   inner - The wrapped type (transparent wrapper)
+-- |
+-- | Example:
+-- |   type PaymentRoute = Route POST (Path (Lit "payment"))
+-- |     (Request { body :: JSON PaymentRequest })
+-- |     ( ok :: { body :: PaymentResponse }
+-- |     ) # Callback "onPaymentComplete" "{$request.body#/callbackUrl}" POST
+-- |         (JSON { status :: String, transactionId :: String })
+-- |         ( ok :: { body :: { received :: Boolean } } )
+data Callback :: Symbol -> Symbol -> Type -> Type -> Row Type -> Type -> Type
+data Callback name expression method requestBody responseRow inner
 
 --------------------------------------------------------------------------------
 -- Metadata Extraction Typeclasses

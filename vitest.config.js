@@ -5,6 +5,7 @@ export default defineConfig({
     include: [
       "output/Test.Operators/index.js",
       "test-compile-fail/compile-fail.test.js",
+      "test/openapi-validation.test.js",
     ],
     globals: true,
     environment: "jsdom",

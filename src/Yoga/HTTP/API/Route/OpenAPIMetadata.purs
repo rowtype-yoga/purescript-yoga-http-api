@@ -45,8 +45,9 @@ module Yoga.HTTP.API.Route.OpenAPIMetadata
   , Enum
   , Schema
   , Callback
-  -- , type (#)
+  , type (#)
   , Link
+  , type (:#)
   , Examples
   , ExampleValue
   , ExampleWithSummary
@@ -202,6 +203,8 @@ infixl 5 type Callback as #
 -- |     # Link "deleteUser" "deleteUserById" ( userId :: "$response.body#/id" )
 data Link :: Type -> Symbol -> Symbol -> Row Type -> Type
 data Link inner linkName operationId parametersRow
+
+infixl 5 type Link as :#
 
 -- | Attach multiple named examples to a type for OpenAPI documentation.
 -- | This allows you to provide several example values that will appear in the

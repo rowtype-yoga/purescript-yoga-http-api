@@ -10,7 +10,6 @@ import Test.MetadataValidationTest as MetadataValidationTest
 import Test.APIRecordTest as APIRecordTest
 import Test.SchemaComponentTest as SchemaComponentTest
 import Test.BearerAuthTest as BearerAuthTest
--- import Test.CallbackTest as CallbackTest
 import Test.CookieAuthTest as CookieAuthTest
 import Test.OpenAPIInfoTest as OpenAPIInfoTest
 import Test.ContentTypeTest as ContentTypeTest
@@ -66,11 +65,6 @@ spec = do
   _ <- ExamplesTest.testExamplesBackwardCompatibility
   _ <- ExamplesTest.testExamplesInQueryParams
   _ <- ExamplesTest.testComplexExampleObject
-  -- _ <- CallbackTest.testPaymentCallback
-  -- _ <- CallbackTest.testMultipleCallbacks
-  -- _ <- CallbackTest.testCallbackMethods
-  -- _ <- CallbackTest.testAPISpecWithCallbacks
-  -- _ <- CallbackTest.testRealWorldWebhooks
   SchemaComponentTest.testSchemaComponents
 
 main :: ViTest

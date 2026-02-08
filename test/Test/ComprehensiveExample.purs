@@ -6,12 +6,11 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Type.Function (type (#))
-import Type.Proxy (Proxy(..))
-import Yoga.HTTP.API.Path (Path, Lit, Capture, type (:), type (/), type (:?))
+import Yoga.HTTP.API.Path (type (:), type (/), type (:?))
 import Yoga.HTTP.API.Route (GET, POST, PUT, DELETE, Route, Request, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Auth (BearerToken, ApiKeyHeader, BasicAuth)
 import Yoga.HTTP.API.Route.Encoding (JSON, PlainText, XML)
-import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Examples, ExampleValue, ExampleWithSummary, Schema, Minimum, Maximum, Pattern, MinLength, MaxLength)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, ExampleValue, Examples, Schema)
 import Yoga.JSON (writeJSON)
 import Test.OpenAPIValidation (validate)
 import ViTest (ViTest, describe, test)
@@ -55,31 +54,31 @@ type ComprehensiveAPI =
 
   , -- Multiple content types - XML
     exportUser ::
-      Route GET ("users" / "id" : Int / Lit "export")
+      Route GET ("users" / "id" : Int / "export")
         (Request {})
         (ok :: { body :: XML User })
 
   , -- Plain text response
     healthCheck ::
-      Route GET (Path (Lit "health"))
+      Route GET "health"
         (Request {})
         (ok :: { body :: PlainText String })
 
   , -- API Key authentication
     getStats ::
-      Route GET (Path (Lit "stats"))
+      Route GET "stats"
         (Request { headers :: { xApiKey :: ApiKeyHeader } })
         (ok :: { body :: Stats })
 
   , -- Basic auth
     login ::
-      Route POST (Path (Lit "login"))
+      Route POST "login"
         (Request { headers :: { authorization :: BasicAuth } })
         (ok :: { body :: { token :: String # Description "JWT access token" } })
 
   , -- Path with examples
     getUserPosts ::
-      Route GET ("users" / "userId" : (Int # Examples (alice :: ExampleValue "1", bob :: ExampleValue "2")) / Lit "posts")
+      Route GET ("users" / "userId" : (Int # Examples (alice :: ExampleValue "1", bob :: ExampleValue "2")) / "posts")
         (Request {})
         (ok :: { body :: Array Post })
   }

@@ -5,7 +5,7 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
-import Yoga.HTTP.API.Route (GET, POST, PUT, Route, Request, buildOpenAPISpec)
+import Yoga.HTTP.API.Route (GET, POST, PUT, Route, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, XML, CustomContentType)
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
@@ -21,7 +21,7 @@ testRequestContentTypes :: Effect ViTest
 testRequestContentTypes = describe "Request Content Types" do
   _ <- test "JSON request body generates application/json" do
     let
-      spec = buildOpenAPISpec @{ createUser :: Route POST "users" (Request { body :: JSON User }) (ok :: { body :: User }) }
+      spec = buildOpenAPISpec @{ createUser :: Route POST "users" { body :: JSON User } (ok :: { body :: User }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -34,7 +34,7 @@ testRequestContentTypes = describe "Request Content Types" do
 
   _ <- test "FormData request body generates application/x-www-form-urlencoded" do
     let
-      spec = buildOpenAPISpec @{ createUser :: Route POST "users" (Request { body :: FormData User }) (ok :: { body :: JSON User }) }
+      spec = buildOpenAPISpec @{ createUser :: Route POST "users" { body :: FormData User } (ok :: { body :: JSON User }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -47,7 +47,7 @@ testRequestContentTypes = describe "Request Content Types" do
 
   _ <- test "MultipartFormData request body generates multipart/form-data" do
     let
-      spec = buildOpenAPISpec @{ uploadFile :: Route POST "upload" (Request { body :: MultipartFormData FileUpload }) (ok :: { body :: { success :: Boolean } }) }
+      spec = buildOpenAPISpec @{ uploadFile :: Route POST "upload" { body :: MultipartFormData FileUpload } (ok :: { body :: { success :: Boolean } }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -59,7 +59,7 @@ testRequestContentTypes = describe "Request Content Types" do
 
   _ <- test "PlainText request body generates text/plain" do
     let
-      spec = buildOpenAPISpec @{ echo :: Route POST "echo" (Request { body :: PlainText String }) (ok :: { body :: PlainText String }) }
+      spec = buildOpenAPISpec @{ echo :: Route POST "echo" { body :: PlainText String } (ok :: { body :: PlainText String }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -71,7 +71,7 @@ testRequestContentTypes = describe "Request Content Types" do
 
   _ <- test "XML request body generates application/xml" do
     let
-      spec = buildOpenAPISpec @{ updateDoc :: Route PUT "document" (Request { body :: XML XmlDocument }) (ok :: { body :: XML XmlDocument }) }
+      spec = buildOpenAPISpec @{ updateDoc :: Route PUT "document" { body :: XML XmlDocument } (ok :: { body :: XML XmlDocument }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -83,7 +83,7 @@ testRequestContentTypes = describe "Request Content Types" do
 
   test "CustomContentType request body generates custom MIME type" do
     let
-      spec = buildOpenAPISpec @{ customEndpoint :: Route POST "custom" (Request { body :: CustomContentType "application/vnd.api+json" User }) (ok :: { body :: User }) }
+      spec = buildOpenAPISpec @{ customEndpoint :: Route POST "custom" { body :: CustomContentType "application/vnd.api+json" User } (ok :: { body :: User }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -97,7 +97,7 @@ testResponseContentTypes :: Effect ViTest
 testResponseContentTypes = describe "Response Content Types" do
   _ <- test "JSON response body generates application/json" do
     let
-      spec = buildOpenAPISpec @{ getUser :: Route GET "users" (Request {}) (ok :: { body :: JSON User }) }
+      spec = buildOpenAPISpec @{ getUser :: Route GET "users" {} (ok :: { body :: JSON User }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -109,7 +109,7 @@ testResponseContentTypes = describe "Response Content Types" do
 
   _ <- test "PlainText response body generates text/plain" do
     let
-      spec = buildOpenAPISpec @{ getText :: Route GET "text" (Request {}) (ok :: { body :: PlainText String }) }
+      spec = buildOpenAPISpec @{ getText :: Route GET "text" {} (ok :: { body :: PlainText String }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -121,7 +121,7 @@ testResponseContentTypes = describe "Response Content Types" do
 
   _ <- test "XML response body generates application/xml" do
     let
-      spec = buildOpenAPISpec @{ getDoc :: Route GET "document" (Request {}) (ok :: { body :: XML XmlDocument }) }
+      spec = buildOpenAPISpec @{ getDoc :: Route GET "document" {} (ok :: { body :: XML XmlDocument }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -133,7 +133,7 @@ testResponseContentTypes = describe "Response Content Types" do
 
   _ <- test "CustomContentType response body generates custom MIME type" do
     let
-      spec = buildOpenAPISpec @{ customGet :: Route GET "custom" (Request {}) (ok :: { body :: CustomContentType "application/vnd.api+json" User }) }
+      spec = buildOpenAPISpec @{ customGet :: Route GET "custom" {} (ok :: { body :: CustomContentType "application/vnd.api+json" User }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -145,7 +145,7 @@ testResponseContentTypes = describe "Response Content Types" do
 
   test "Unwrapped response body defaults to application/json for backward compatibility" do
     let
-      spec = buildOpenAPISpec @{ getUser :: Route GET "users" (Request {}) (ok :: { body :: User }) }
+      spec = buildOpenAPISpec @{ getUser :: Route GET "users" {} (ok :: { body :: User }) }
         { title: "API"
         , version: "1.0.0"
         , description: Nothing
@@ -161,10 +161,10 @@ testMixedContentTypes = describe "Mixed Content Types in API" do
     let
       spec = buildOpenAPISpec
         @
-        { createUser :: Route POST "users" (Request { body :: JSON User }) (ok :: { body :: JSON User })
-        , uploadFile :: Route POST "upload" (Request { body :: MultipartFormData FileUpload }) (ok :: { body :: { success :: Boolean } })
-        , echo :: Route POST "echo" (Request { body :: PlainText String }) (ok :: { body :: PlainText String })
-        , getDoc :: Route GET "document" (Request {}) (ok :: { body :: XML XmlDocument })
+        { createUser :: Route POST "users" { body :: JSON User } (ok :: { body :: JSON User })
+        , uploadFile :: Route POST "upload" { body :: MultipartFormData FileUpload } (ok :: { body :: { success :: Boolean } })
+        , echo :: Route POST "echo" { body :: PlainText String } (ok :: { body :: PlainText String })
+        , getDoc :: Route GET "document" {} (ok :: { body :: XML XmlDocument })
         }
         { title: "Multi-Content API"
         , version: "1.0.0"

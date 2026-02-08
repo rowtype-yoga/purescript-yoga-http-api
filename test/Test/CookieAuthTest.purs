@@ -5,7 +5,7 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
-import Yoga.HTTP.API.Route (GET, Route, Request, buildOpenAPISpec)
+import Yoga.HTTP.API.Route (GET, Route, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Auth (ApiKeyCookie)
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
@@ -16,15 +16,15 @@ import ViTest.Expect (expectToBe)
 --------------------------------------------------------------------------------
 
 type ApiKeyCookieAPI =
-  { getProtected :: Route GET "protected" (Request { cookies :: { sessionId :: ApiKeyCookie } }) (ok :: { body :: { message :: String } })
+  { getProtected :: Route GET "protected" { cookies :: { sessionId :: ApiKeyCookie } } (ok :: { body :: { message :: String } })
   }
 
 type RegularCookieParamsAPI =
-  { getData :: Route GET "data" (Request { cookies :: { preference :: String, theme :: String } }) (ok :: { body :: { data :: String } })
+  { getData :: Route GET "data" { cookies :: { preference :: String, theme :: String } } (ok :: { body :: { data :: String } })
   }
 
 type MixedCookieAPI =
-  { getResource :: Route GET "resource" (Request { cookies :: { sessionId :: ApiKeyCookie, userId :: String } }) (ok :: { body :: { resource :: String } })
+  { getResource :: Route GET "resource" { cookies :: { sessionId :: ApiKeyCookie, userId :: String } } (ok :: { body :: { resource :: String } })
   }
 
 --------------------------------------------------------------------------------

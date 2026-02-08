@@ -14,7 +14,6 @@ import Prim.RowList (class RowToList)
 import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Route.Handler
   ( HandlerFn
-  , Request
   , class DefaultRequestFields
   , class EncodingBody
   , class SegmentPathParams
@@ -42,7 +41,7 @@ instance
   , ConvertResponseVariant userResp respVariant
   ) =>
   RouteHandler
-    (Route method segments (Request (Record partialRequest)) userResp)
+    (Route method segments (Record partialRequest) userResp)
     pathParams
     queryParams
     fullHeaders

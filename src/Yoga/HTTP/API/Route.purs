@@ -19,7 +19,7 @@ import Yoga.HTTP.API.Path (Path, Root, Lit, Capture, PathCons, Param, QueryParam
 import Yoga.HTTP.API.Route.Auth (BearerToken(..), BasicAuth(..), ApiKeyHeader(..), ApiKeyCookie(..), DigestAuth(..))
 import Yoga.HTTP.API.Route.BearerToken (BearerToken(..))
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, XML, CustomContentType, NoBody)
-import Yoga.HTTP.API.Route.Handler (HandlerFn, Request)
+import Yoga.HTTP.API.Route.Handler (HandlerFn)
 import Yoga.HTTP.API.Route.HeaderError (HeaderError(..))
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValue, class HeaderValueType, headerValueType, parseHeader, printHeader)
 import Yoga.HTTP.API.Route.Method (DELETE, GET, PATCH, POST, PUT)

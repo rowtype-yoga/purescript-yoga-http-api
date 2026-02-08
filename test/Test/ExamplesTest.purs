@@ -8,7 +8,7 @@ import Effect (Effect)
 import Type.Function (type (#))
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (type (/), type (:))
-import Yoga.HTTP.API.Route (GET, POST, Route, Request, buildOpenAPISpec)
+import Yoga.HTTP.API.Route (GET, POST, Route, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Encoding (JSON)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (Example, Examples, ExampleValue, ExampleWithSummary, ExampleObject, example, examples)
 import Yoga.JSON (writeJSON)
@@ -36,7 +36,7 @@ testExamplesMetadataExtraction = describe "Examples Metadata - Type-level extrac
     expectToBe true (isJust result)
 
 type TestAPIWithPathExamples =
-  { getUser :: Route GET ("users" / "userId" : (Int # Examples (basic :: ExampleValue "123", premium :: ExampleWithSummary "456" "Premium user"))) (Request {}) (ok :: { body :: { id :: Int, name :: String } })
+  { getUser :: Route GET ("users" / "userId" : (Int # Examples (basic :: ExampleValue "123", premium :: ExampleWithSummary "456" "Premium user"))) {} (ok :: { body :: { id :: Int, name :: String } })
   }
 
 testExamplesInParameters :: Effect ViTest
@@ -59,7 +59,7 @@ type User =
   }
 
 type TestAPIWithRequestBodyExamples =
-  { createUser :: Route POST "users" (Request { body :: JSON User }) (ok :: { body :: { id :: Int } })
+  { createUser :: Route POST "users" { body :: JSON User } (ok :: { body :: { id :: Int } })
   }
 
 testExamplesInRequestBody :: Effect ViTest
@@ -77,7 +77,7 @@ testExamplesInRequestBody = describe "Examples in Request Body" do
     expectToBe true (String.contains (String.Pattern "users") json)
 
 type TestAPIWithComplexExamples =
-  { getItem :: Route GET ("items" / "itemId" : (Int # Examples (basic :: ExampleWithSummary "42" "A basic item", special :: ExampleObject "999" "Special item" "A very special item" ""))) (Request {}) (ok :: { body :: { id :: Int } })
+  { getItem :: Route GET ("items" / "itemId" : (Int # Examples (basic :: ExampleWithSummary "42" "A basic item", special :: ExampleObject "999" "Special item" "A very special item" ""))) {} (ok :: { body :: { id :: Int } })
   }
 
 testExamplesWithSummary :: Effect ViTest
@@ -111,7 +111,7 @@ testExamplesBackwardCompatibility = describe "Backward Compatibility - Single Ex
     expectToBe true (isJust exsResult)
 
 type TestAPIWithQueryExamples =
-  { searchItems :: Route GET "items" (Request { query :: { limit :: Int # Examples (small :: ExampleValue "10", large :: ExampleValue "100") } }) (ok :: { body :: { items :: Array String } })
+  { searchItems :: Route GET "items" { query :: { limit :: Int # Examples (small :: ExampleValue "10", large :: ExampleValue "100") } } (ok :: { body :: { items :: Array String } })
   }
 
 testExamplesInQueryParams :: Effect ViTest
@@ -129,7 +129,7 @@ testExamplesInQueryParams = describe "Examples in Query Parameters" do
     expectToBe true (String.contains (String.Pattern "items") json)
 
 type TestAPIWithExternalExample =
-  { getResource :: Route GET ("resource" / "id" : (String # Examples (inline :: ExampleObject "abc123" "Inline example" "An example with inline value" "", external :: ExampleObject "" "External example" "An example from external URL" "https://example.com/resource.json"))) (Request {}) (ok :: { body :: { data :: String } })
+  { getResource :: Route GET ("resource" / "id" : (String # Examples (inline :: ExampleObject "abc123" "Inline example" "An example with inline value" "", external :: ExampleObject "" "External example" "An example from external URL" "https://example.com/resource.json"))) {} (ok :: { body :: { data :: String } })
   }
 
 testComplexExampleObject :: Effect ViTest

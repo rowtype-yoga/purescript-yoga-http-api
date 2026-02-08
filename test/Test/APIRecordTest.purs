@@ -9,7 +9,7 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (type (/), type (:))
-import Yoga.HTTP.API.Route (GET, POST, Route, Request, JSON, respondNoHeaders, buildOpenAPISpec, collectOperations, mkHandler, apiHandlers)
+import Yoga.HTTP.API.Route (GET, POST, Route, JSON, respondNoHeaders, buildOpenAPISpec, collectOperations, mkHandler, apiHandlers)
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)
@@ -24,9 +24,9 @@ expectToEqual expected actual = expectToBe true (expected == actual)
 type User = { id :: Int, name :: String }
 
 type TestAPI =
-  { getUser :: Route GET ("users" / "id" : Int) (Request {}) (ok :: { body :: User })
-  , listUsers :: Route GET "users" (Request {}) (ok :: { body :: Array User })
-  , createUser :: Route POST "users" (Request { body :: JSON User }) (created :: { body :: User })
+  { getUser :: Route GET ("users" / "id" : Int) {} (ok :: { body :: User })
+  , listUsers :: Route GET "users" {} (ok :: { body :: Array User })
+  , createUser :: Route POST "users" { body :: JSON User } (created :: { body :: User })
   }
 
 --------------------------------------------------------------------------------

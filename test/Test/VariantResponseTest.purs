@@ -10,7 +10,7 @@ import Effect.Aff (Aff)
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Route.StatusCode (StatusCode(..))
 import Yoga.HTTP.API.Path (Root)
-import Yoga.HTTP.API.Route (GET, POST, PUT, Route, Request, Response(..), respondNoHeaders, respondWith, toOpenAPI, statusCodeFor, statusCodeToString)
+import Yoga.HTTP.API.Route (GET, POST, PUT, Route, Response(..), respondNoHeaders, respondWith, toOpenAPI, statusCodeFor, statusCodeToString)
 import Yoga.HTTP.API.Route.Response (respond) as Response
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)
@@ -25,14 +25,14 @@ expectToEqual expected actual = expectToBe true (expected == actual)
 
 -- Simple variant route with ok and notFound responses
 type SimpleVariantRoute = Route GET Root
-  (Request {})
+  {}
   ( ok :: { body :: String }
   , notFound :: { body :: String }
   )
 
 -- Variant route with multiple status codes
 type MultiStatusRoute = Route POST Root
-  (Request { headers :: { authorization :: String } })
+  { headers :: { authorization :: String } }
   ( created :: { headers :: { "Location" :: String }, body :: User }
   , badRequest :: { body :: ErrorMessage }
   , unauthorized :: { body :: ErrorMessage }
@@ -40,7 +40,7 @@ type MultiStatusRoute = Route POST Root
 
 -- Variant route with many response types
 type ComplexVariantRoute = Route PUT Root
-  (Request {})
+  {}
   ( ok :: { body :: User }
   , created :: { headers :: { "Location" :: String }, body :: User }
   , badRequest :: { body :: ErrorMessage }
@@ -242,7 +242,7 @@ testSimpleVariantOpenAPI = describe "OpenAPI Generation - Simple Variant" $ do
     let
       result = toOpenAPI
         @( Route GET Root
-            (Request {})
+            {}
             ( ok :: { body :: String }
             , notFound :: { body :: String }
             )
@@ -265,7 +265,7 @@ testComplexVariantOpenAPI = describe "OpenAPI Generation - Complex Variant" $ do
     let
       result = toOpenAPI
         @( Route POST Root
-            (Request { headers :: { authorization :: String } })
+            { headers :: { authorization :: String } }
             ( created :: { headers :: { "Location" :: String }, body :: User }
             , badRequest :: { body :: ErrorMessage }
             , unauthorized :: { body :: ErrorMessage }
@@ -299,7 +299,7 @@ testVariantWithHeaders = describe "OpenAPI Generation - Variant with Response He
     let
       result = toOpenAPI
         @( Route POST Root
-            (Request {})
+            {}
             ( created :: { headers :: { "Location" :: String, "X-Request-Id" :: String }, body :: User }
             )
         )

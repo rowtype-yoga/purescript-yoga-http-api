@@ -7,7 +7,7 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Type.Function (type (#))
 import Yoga.HTTP.API.Path (type (:), type (/), type (:?))
-import Yoga.HTTP.API.Route (GET, POST, PUT, DELETE, Route, Request, buildOpenAPISpec)
+import Yoga.HTTP.API.Route (GET, POST, PUT, DELETE, Route, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Auth (BearerToken, ApiKeyHeader, BasicAuth)
 import Yoga.HTTP.API.Route.Encoding (JSON, PlainText, XML)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, ExampleValue, Examples, Schema)
@@ -21,65 +21,63 @@ type ComprehensiveAPI =
   { -- Simple GET with path parameter and authentication
     getUser ::
       Route GET ("users" / "id" : Int)
-        (Request { headers :: { authorization :: BearerToken } })
+        { headers :: { authorization :: BearerToken } }
         (ok :: { body :: Schema "User" User })
 
   , -- List users with query parameters
     listUsers ::
       Route GET ("users" :? { limit :: Int # Example "10", offset :: Int # Example "0" })
-        (Request {})
+        {}
         (ok :: { body :: Array User })
 
   , -- POST with JSON body and schema
     createUser ::
       Route POST "users"
-        (Request { body :: JSON (Schema "CreateUserRequest" CreateUserRequest) })
+        { body :: JSON (Schema "CreateUserRequest" CreateUserRequest) }
         (created :: { body :: Schema "User" User })
 
   , -- PUT with authentication and JSON body
     updateUser ::
       Route PUT ("users" / "id" : Int)
-        ( Request
-            { headers :: { authorization :: BearerToken }
-            , body :: JSON UpdateUserRequest
-            }
-        )
+        { headers :: { authorization :: BearerToken }
+        , body :: JSON UpdateUserRequest
+        }
         (ok :: { body :: User })
 
   , -- DELETE with authentication
     deleteUser ::
       Route DELETE ("users" / "id" : Int)
-        (Request { headers :: { authorization :: BearerToken } })
+        { headers :: { authorization :: BearerToken } }
         (noContent :: { body :: {} })
 
   , -- Multiple content types - XML
     exportUser ::
       Route GET ("users" / "id" : Int / "export")
-        (Request {})
+        {}
         (ok :: { body :: XML User })
 
   , -- Plain text response
     healthCheck ::
       Route GET "health"
-        (Request {})
+        {}
         (ok :: { body :: PlainText String })
 
   , -- API Key authentication
     getStats ::
       Route GET "stats"
-        (Request { headers :: { xApiKey :: ApiKeyHeader } })
+        { headers :: { xApiKey :: ApiKeyHeader } }
         (ok :: { body :: Stats })
 
   , -- Basic auth
     login ::
       Route POST "login"
-        (Request { headers :: { authorization :: BasicAuth } })
+        { headers :: { authorization :: BasicAuth } }
         (ok :: { body :: { token :: String # Description "JWT access token" } })
 
   , -- Path with examples
     getUserPosts ::
       Route GET ("users" / "userId" : (Int # Examples (alice :: ExampleValue "1", bob :: ExampleValue "2")) / "posts")
-        (Request {})
+        {}
         (ok :: { body :: Array Post })
   }
 

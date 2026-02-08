@@ -7,13 +7,13 @@ import Data.Variant (Variant)
 import Effect.Aff (Aff)
 import Yoga.HTTP.API.Path (Path, Lit, Capture, type (/), type (:))
 import Yoga.HTTP.API.Route.Encoding (NoBody)
-import Yoga.HTTP.API.Route.Handler (Request)
+import Yoga.HTTP.API.Route.Handler
 import Yoga.HTTP.API.Route.Method (GET)
 import Yoga.HTTP.API.Route.Response (Response, respondNoHeaders)
 import Yoga.HTTP.API.Route.Route (Route)
 import Yoga.HTTP.API.Route.RouteHandler (Handler, mkHandler)
 
-type MyRoute = Route GET (Path (Lit "users" / Capture "id" Int)) (Request {}) (ok :: { body :: String })
+type MyRoute = Route GET (Path (Lit "users" / Capture "id" Int)) {} (ok :: { body :: String })
 
 -- Handler takes { id :: String } but route has Capture "id" Int
 test :: Handler MyRoute

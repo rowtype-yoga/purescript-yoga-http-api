@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
 import Yoga.HTTP.API.Path (type (:), type (/))
-import Yoga.HTTP.API.Route (GET, POST, Route, Request, JSON, Schema, buildOpenAPISpec)
+import Yoga.HTTP.API.Route (GET, POST, Route, JSON, Schema, buildOpenAPISpec)
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)
@@ -17,13 +17,13 @@ type Post = { id :: Int, title :: String, authorId :: Int }
 type SchemaAPI =
   { getUser ::
       Route GET ("users" / "id" : Int)
-        (Request {})
+        {}
         (ok :: { body :: Schema "User" User })
   , createUser ::
       Route POST "users"
-        (Request { body :: JSON (Schema "User" User) })
+        { body :: JSON (Schema "User" User) }
         (created :: { body :: Schema "User" User })
-  , listPosts :: Route GET "posts" (Request {}) (ok :: { body :: Array (Schema "Post" Post) })
+  , listPosts :: Route GET "posts" {} (ok :: { body :: Array (Schema "Post" Post) })
   }
 
 testSchemaComponents :: Effect ViTest

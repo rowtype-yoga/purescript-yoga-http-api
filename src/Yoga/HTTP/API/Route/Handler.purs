@@ -1,6 +1,5 @@
 module Yoga.HTTP.API.Route.Handler
   ( HandlerFn
-  , Request(..)
   , class DefaultRequestFields
   , class DefaultRequestFieldsRL
   , class SegmentPathParams
@@ -21,20 +20,6 @@ import Prim.Row as Row
 import Prim.RowList as RL
 import Yoga.HTTP.API.Path (Path, PathCons, Capture, Param, QueryParams, Required)
 import Yoga.HTTP.API.Route.Encoding (JSON, NoBody)
-
---------------------------------------------------------------------------------
--- Request Data Type
---------------------------------------------------------------------------------
-
--- | Request data combining headers and body
--- |
--- | Usage:
--- |   Request { body :: JSON User }                            -- body only
--- |   Request { headers :: { auth :: String } }                -- headers only
--- |   Request { body :: JSON User, headers :: { auth :: String } }  -- both
--- |   Request {}                                               -- neither
-data Request :: Type -> Type
-data Request r = Request r
 
 --------------------------------------------------------------------------------
 -- Handler Type
@@ -162,7 +147,7 @@ instance encodingBodyNoBody :: EncodingBody NoBody Unit
 -- RequestHeaders: Extract headers row from a request type
 --------------------------------------------------------------------------------
 
--- | Extract the headers row from a Request type.
+-- | Extract the headers row from a request record type.
 -- |
 -- | The request is expected to have a `headers` field.
 class RequestHeaders (request :: Type) (headers :: Row Type) | request -> headers
@@ -170,13 +155,13 @@ class RequestHeaders (request :: Type) (headers :: Row Type) | request -> header
 instance requestHeadersRequest ::
   ( Row.Cons "headers" (Record headers) _rest requestRow
   ) =>
-  RequestHeaders (Request (Record requestRow)) headers
+  RequestHeaders (Record requestRow) headers
 
 --------------------------------------------------------------------------------
 -- RequestCookies: Extract cookies row from a request type
 --------------------------------------------------------------------------------
 
--- | Extract the cookies row from a Request type.
+-- | Extract the cookies row from a request record type.
 -- |
 -- | The request is expected to have a `cookies` field.
 class RequestCookies (request :: Type) (cookies :: Row Type) | request -> cookies
@@ -184,13 +169,13 @@ class RequestCookies (request :: Type) (cookies :: Row Type) | request -> cookie
 instance requestCookiesRequest ::
   ( Row.Cons "cookies" (Record cookies) _rest requestRow
   ) =>
-  RequestCookies (Request (Record requestRow)) cookies
+  RequestCookies (Record requestRow) cookies
 
 --------------------------------------------------------------------------------
 -- RequestBody: Extract body encoding from a request type
 --------------------------------------------------------------------------------
 
--- | Extract the body encoding type from a Request type.
+-- | Extract the body encoding type from a request record type.
 -- |
 -- | The request is expected to have a `body` field.
 class RequestBody (request :: Type) (encoding :: Type) | request -> encoding
@@ -198,7 +183,7 @@ class RequestBody (request :: Type) (encoding :: Type) | request -> encoding
 instance requestBodyRequest ::
   ( Row.Cons "body" encoding _rest requestRow
   ) =>
-  RequestBody (Request (Record requestRow)) encoding
+  RequestBody (Record requestRow) encoding
 
 --------------------------------------------------------------------------------
 -- DefaultRequestFields: Compute defaults for missing request fields

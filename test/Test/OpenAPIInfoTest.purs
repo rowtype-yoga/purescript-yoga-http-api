@@ -5,13 +5,13 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
-import Yoga.HTTP.API.Route (GET, Route, Request, buildOpenAPISpec)
+import Yoga.HTTP.API.Route (GET, Route, buildOpenAPISpec)
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)
 
 type SimpleAPI =
-  { getRoot :: Route GET "" (Request {}) (ok :: { body :: { message :: String } })
+  { getRoot :: Route GET "" {} (ok :: { body :: { message :: String } })
   }
 
 testInfoDescription :: Effect ViTest

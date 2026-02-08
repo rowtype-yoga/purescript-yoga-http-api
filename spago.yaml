@@ -1,6 +1,3 @@
-workspace:
-  packageSet:
-    registry: 63.2.1
 
 package:
   name: yoga-http-api

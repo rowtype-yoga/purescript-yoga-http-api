@@ -27,7 +27,7 @@ type ComprehensiveAPI =
 
   , -- List users with query parameters
     listUsers ::
-      Route GET (Path (Lit "users") :? { limit :: Int # Example "10", offset :: Int # Example "0" })
+      Route GET ("users" :? { limit :: Int # Example "10", offset :: Int # Example "0" })
         (Request {})
         (ok :: { body :: Array User })
 

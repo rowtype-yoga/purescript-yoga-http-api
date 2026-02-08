@@ -7,7 +7,7 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Type.Function (type (#))
 import Type.Proxy (Proxy(..))
-import Yoga.HTTP.API.Path (Path, Lit, Capture, type (:), type (/))
+import Yoga.HTTP.API.Path (Path, Lit, Capture, type (:), type (/), type (:?))
 import Yoga.HTTP.API.Route (GET, POST, PUT, DELETE, Route, Request, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Auth (BearerToken, ApiKeyHeader, BasicAuth)
 import Yoga.HTTP.API.Route.Encoding (JSON, PlainText, XML)
@@ -27,19 +27,13 @@ type ComprehensiveAPI =
 
   , -- List users with query parameters
     listUsers ::
-      Route GET (Path (Lit "users"))
-        ( Request
-            { query ::
-                { limit :: Int # Example "10"
-                , offset :: Int # Example "0"
-                }
-            }
-        )
+      Route GET (Path (Lit "users") :? { limit :: Int # Example "10", offset :: Int # Example "0" })
+        (Request {})
         (ok :: { body :: Array User })
 
   , -- POST with JSON body and schema
     createUser ::
-      Route POST (Path (Lit "users"))
+      Route POST "users"
         (Request { body :: JSON (Schema "CreateUserRequest" CreateUserRequest) })
         (created :: { body :: Schema "User" User })
 

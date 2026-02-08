@@ -26,6 +26,7 @@
             {
               "integers": ">=6.0.0 <7.0.0"
             },
+            "literals",
             {
               "maybe": ">=6.0.0 <7.0.0"
             },
@@ -44,9 +45,11 @@
             {
               "tuples": ">=7.0.0 <8.0.0"
             },
+            "undefined-is-not-a-problem",
             {
               "unsafe-coerce": ">=6.0.0 <7.0.0"
             },
+            "untagged-union",
             {
               "variant": ">=8.0.0 <9.0.0"
             },
@@ -1043,6 +1046,20 @@
         "unfoldable"
       ]
     },
+    "literals": {
+      "type": "registry",
+      "version": "1.0.2",
+      "integrity": "sha256-ZkGRFD6gb8etYvyMYpX1Z7lx1Tql7R1VGnD1Dzinup8=",
+      "dependencies": [
+        "integers",
+        "maybe",
+        "numbers",
+        "partial",
+        "prelude",
+        "typelevel-prelude",
+        "unsafe-coerce"
+      ]
+    },
     "maybe": {
       "type": "registry",
       "version": "6.0.0",
@@ -1304,6 +1321,22 @@
         "type-equality"
       ]
     },
+    "undefined-is-not-a-problem": {
+      "type": "registry",
+      "version": "1.1.0",
+      "integrity": "sha256-0YkVzpcKi40T43go7/f8uLVIYgir6lGzOytL6LPfiog=",
+      "dependencies": [
+        "effect",
+        "either",
+        "foreign",
+        "maybe",
+        "newtype",
+        "prelude",
+        "tuples",
+        "type-equality",
+        "unsafe-coerce"
+      ]
+    },
     "unfoldable": {
       "type": "registry",
       "version": "6.0.0",
@@ -1321,6 +1354,22 @@
       "version": "6.0.0",
       "integrity": "sha256-0L1QsaY20OILjfU5TV72d3U/tSjhmL9hJ32WMp857Lk=",
       "dependencies": []
+    },
+    "untagged-union": {
+      "type": "registry",
+      "version": "1.0.0",
+      "integrity": "sha256-MQvpb13TZEBoi9n/AoQ7ugniSQqbN6XQmAjii9pqJRk=",
+      "dependencies": [
+        "either",
+        "foreign",
+        "foreign-object",
+        "literals",
+        "maybe",
+        "newtype",
+        "prelude",
+        "tuples",
+        "unsafe-coerce"
+      ]
     },
     "variant": {
       "type": "registry",

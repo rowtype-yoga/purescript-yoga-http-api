@@ -11,6 +11,9 @@ package:
       githubOwner: rowtype-yoga
       githubRepo: purescript-yoga-http-api
   dependencies:
+    - literals
+    - undefined-is-not-a-problem
+    - untagged-union
     - aff: ">=8.0.0 <9.0.0"
     - arrays: ">=7.3.0 <8.0.0"
     - either: ">=6.1.0 <7.0.0"

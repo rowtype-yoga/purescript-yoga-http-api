@@ -3,11 +3,10 @@ workspace:
     registry: 63.2.1
   extraPackages:
     yoga-options:
-      path: ../purescript-yoga-options
-    vitest:
-      path: ../purescript-vitest
-    compile-fail:
-      path: ../purescript-compile-fail
+      git: https://github.com/rowtype-yoga/purescript-yoga-options.git
+      ref: v0.1.0
+      dependencies:
+        - prelude
 
 package:
   name: yoga-http-api
@@ -24,7 +23,6 @@ package:
     - foldable-traversable: ">=6.0.0 <7.0.0"
     - foreign: ">=7.0.0 <8.0.0"
     - foreign-object: ">=4.1.0 <5.0.0"
-    - identity: ">=6.0.0 <7.0.0"
     - integers: ">=6.0.0 <7.0.0"
     - literals: ">=1.0.2 <2.0.0"
     - maybe: ">=6.0.0 <7.0.0"
@@ -41,8 +39,6 @@ package:
   test:
     main: Test.Operators
     dependencies:
-      - vitest: ">=2.0.0 <3.0.0"
-      - compile-fail: ">=0.1.0 <1.0.0"
       - console: ">=6.0.0 <7.0.0"
       - foreign-object: ">=4.0.0 <5.0.0"
       - arrays: ">=7.0.0 <8.0.0"

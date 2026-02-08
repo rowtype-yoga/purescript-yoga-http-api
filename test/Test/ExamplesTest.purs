@@ -46,9 +46,6 @@ testExamplesInParameters = describe "Examples in Parameters" do
       spec = buildOpenAPISpec @TestAPIWithPathExamples
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "users") json)
@@ -69,9 +66,6 @@ testExamplesInRequestBody = describe "Examples in Request Body" do
       spec = buildOpenAPISpec @TestAPIWithRequestBodyExamples
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "users") json)
@@ -87,9 +81,6 @@ testExamplesWithSummary = describe "Examples with Summary" do
       spec = buildOpenAPISpec @TestAPIWithComplexExamples
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "items") json)
@@ -121,9 +112,6 @@ testExamplesInQueryParams = describe "Examples in Query Parameters" do
       spec = buildOpenAPISpec @TestAPIWithQueryExamples
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "items") json)
@@ -139,9 +127,6 @@ testComplexExampleObject = describe "Complex Example Objects" do
       spec = buildOpenAPISpec @TestAPIWithExternalExample
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "resource") json)

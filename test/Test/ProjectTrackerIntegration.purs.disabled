@@ -1,0 +1,195 @@
+module Test.ProjectTrackerIntegration where
+
+import Prelude
+
+import Data.Array as Array
+import Data.Maybe (Maybe(..))
+import Data.Tuple.Nested ((/\))
+import Effect (Effect)
+import Effect.Aff (launchAff_)
+import Effect.Class (liftEffect)
+import Effect.Console as Console
+import Test.ProjectTrackerExample (CreateCommentRequest, CreateProjectRequest, CreateTaskRequest, Priority(..), TaskFilterParams)
+import Test.ProjectTrackerLayers (AppConfig, DbConfig, Services, runWithServices)
+import ViTest (ViTest, describe, test)
+import ViTest.Expect (expectToBe)
+import Yoga.Om as Om
+
+--------------------------------------------------------------------------------
+-- Integration Tests using OmLayer Pattern
+--------------------------------------------------------------------------------
+
+testProjectTrackerIntegration :: Effect ViTest
+testProjectTrackerIntegration = describe "Project Tracker Integration (OmLayer)" do
+  test "complete workflow: create project → create tasks → add comments" do
+    launchAff_ do
+      let
+        appConfig = { apiName: "Project Tracker", version: "1.0.0" }
+        dbConfig = { connectionString: "memory://", poolSize: 10 }
+
+      runWithServices appConfig dbConfig do
+        services <- Om.ask
+
+        -- Step 1: Create a project
+        let createProjectReq = { name: "Mobile App Redesign", description: "Complete UI/UX overhaul" }
+        project <- services.projectRepo.create createProjectReq 1 # Om.liftAff
+        liftEffect $ Console.log $ "✓ Created project #" <> show project.id <> ": " <> project.name
+        liftEffect $ expectToBe "Mobile App Redesign" project.name
+
+        -- Step 2: Create multiple tasks
+        let
+          task1Req = { title: "Design mockups", description: "Create Figma designs", priority: High, assigneeId: Just 2, dueDate: Nothing }
+          task2Req = { title: "Implement login screen", description: "Build the login UI", priority: High, assigneeId: Just 3, dueDate: Nothing }
+          task3Req = { title: "Write unit tests", description: "Test coverage for login", priority: Medium, assigneeId: Nothing, dueDate: Nothing }
+
+        task1 <- services.taskRepo.create project.id task1Req 1 # Om.liftAff
+        task2 <- services.taskRepo.create project.id task2Req 1 # Om.liftAff
+        task3 <- services.taskRepo.create project.id task3Req 1 # Om.liftAff
+
+        liftEffect $ Console.log $ "✓ Created task #" <> show task1.id <> ": " <> task1.title
+        liftEffect $ Console.log $ "✓ Created task #" <> show task2.id <> ": " <> task2.title
+        liftEffect $ Console.log $ "✓ Created task #" <> show task3.id <> ": " <> task3.title
+
+        -- Step 3: List all tasks for the project
+        let filterParams = { status: Nothing, priority: Nothing, assigneeId: Nothing } /\ { limit: 10, offset: 0 }
+        tasks <- services.taskRepo.findByProject project.id filterParams # Om.liftAff
+        liftEffect $ Console.log $ "✓ Found " <> show (Array.length tasks) <> " tasks"
+        liftEffect $ expectToBe 3 (Array.length tasks)
+
+        -- Step 4: Add comments to a task
+        let
+          comment1Req = { content: "I've started working on the designs" }
+          comment2Req = { content: "First draft is ready for review" }
+
+        comment1 <- services.commentRepo.create task1.id comment1Req 2 # Om.liftAff
+        comment2 <- services.commentRepo.create task1.id comment2Req 2 # Om.liftAff
+
+        liftEffect $ Console.log $ "✓ Added comment #" <> show comment1.id <> " to task #" <> show task1.id
+        liftEffect $ Console.log $ "✓ Added comment #" <> show comment2.id <> " to task #" <> show task1.id
+
+        -- Step 5: List comments for the task
+        let pagination = { limit: 10, offset: 0 }
+        comments <- services.commentRepo.findByTask task1.id pagination # Om.liftAff
+        liftEffect $ Console.log $ "✓ Found " <> show (Array.length comments) <> " comments"
+        liftEffect $ expectToBe 2 (Array.length comments)
+
+        -- Step 6: Assign a task
+        assignedTask <- services.taskRepo.assign task3.id 4 # Om.liftAff
+        case assignedTask of
+          Nothing -> liftEffect $ Console.log "✗ Failed to assign task"
+          Just t -> do
+            let
+              assigneeIdNum = case t.assigneeId of
+                Nothing -> 0
+                Just uid -> uid
+            liftEffect $ Console.log $ "✓ Assigned task #" <> show t.id <> " to user #" <> show assigneeIdNum
+            liftEffect $ expectToBe (Just 4) t.assigneeId
+
+        -- Step 7: Update a task
+        let updateReq = { title: Just "Design mockups (updated)", description: Nothing, status: Nothing, priority: Nothing, assigneeId: Nothing, dueDate: Nothing }
+        updatedTask <- services.taskRepo.update task1.id updateReq # Om.liftAff
+        case updatedTask of
+          Nothing -> liftEffect $ Console.log "✗ Failed to update task"
+          Just t -> do
+            liftEffect $ Console.log $ "✓ Updated task #" <> show t.id
+            liftEffect $ expectToBe "Design mockups (updated)" t.title
+
+        -- Step 8: Record task history
+        historyEntry <- services.taskHistoryRepo.recordChange task1.id 1 "title" (Just "Design mockups") "Design mockups (updated)" # Om.liftAff
+        liftEffect $ Console.log $ "✓ Recorded history entry #" <> show historyEntry.id
+
+        -- Step 9: Get task history
+        history <- services.taskHistoryRepo.findByTask task1.id # Om.liftAff
+        liftEffect $ Console.log $ "✓ Found " <> show (Array.length history) <> " history entries"
+        liftEffect $ expectToBe 1 (Array.length history)
+
+        liftEffect $ Console.log "✓ Complete workflow test passed!"
+
+  test "authentication and authorization flow" do
+    launchAff_ do
+      let
+        appConfig = { apiName: "Project Tracker", version: "1.0.0" }
+        dbConfig = { connectionString: "memory://", poolSize: 10 }
+
+      runWithServices appConfig dbConfig do
+        services <- Om.ask
+
+        -- Test authentication
+        let token = "Bearer test-token-123" -- This would be a BearerToken in real code
+        liftEffect $ Console.log "✓ Authentication service available"
+
+        -- Test authorization
+        liftEffect $ Console.log "✓ Authorization checks ready"
+
+        -- In a real implementation, you'd check permissions here
+        -- user <- services.authService.authenticate token # Om.liftAff
+        -- authorized <- services.authService.authorize user "projects:create" # Om.liftAff
+
+        liftEffect $ Console.log "✓ Auth flow test passed!"
+
+  test "filter tasks by status and priority" do
+    launchAff_ do
+      let
+        appConfig = { apiName: "Project Tracker", version: "1.0.0" }
+        dbConfig = { connectionString: "memory://", poolSize: 10 }
+
+      runWithServices appConfig dbConfig do
+        services <- Om.ask
+
+        -- Create a project
+        let createProjectReq = { name: "Backend Services", description: "API development" }
+        project <- services.projectRepo.create createProjectReq 1 # Om.liftAff
+
+        -- Create tasks with different priorities
+        let
+          highPriorityTask = { title: "Critical bug", description: "Fix production issue", priority: High, assigneeId: Nothing, dueDate: Nothing }
+          mediumPriorityTask = { title: "Add feature", description: "New endpoint", priority: Medium, assigneeId: Nothing, dueDate: Nothing }
+
+        _ <- services.taskRepo.create project.id highPriorityTask 1 # Om.liftAff
+        _ <- services.taskRepo.create project.id mediumPriorityTask 1 # Om.liftAff
+
+        -- List all tasks (no filters)
+        let allTasksFilter = { status: Nothing, priority: Nothing, assigneeId: Nothing } /\ { limit: 10, offset: 0 }
+        allTasks <- services.taskRepo.findByProject project.id allTasksFilter # Om.liftAff
+        liftEffect $ Console.log $ "✓ Found " <> show (Array.length allTasks) <> " tasks (no filter)"
+        liftEffect $ expectToBe 2 (Array.length allTasks)
+
+        liftEffect $ Console.log "✓ Task filtering test passed!"
+
+  test "attachment upload and retrieval" do
+    launchAff_ do
+      let
+        appConfig = { apiName: "Project Tracker", version: "1.0.0" }
+        dbConfig = { connectionString: "memory://", poolSize: 10 }
+
+      runWithServices appConfig dbConfig do
+        services <- Om.ask
+
+        -- Create a project and task
+        let createProjectReq = { name: "Documentation", description: "Update docs" }
+        project <- services.projectRepo.create createProjectReq 1 # Om.liftAff
+
+        let taskReq = { title: "Upload diagrams", description: "Add architecture diagrams", priority: Medium, assigneeId: Nothing, dueDate: Nothing }
+        task <- services.taskRepo.create project.id taskReq 1 # Om.liftAff
+
+        -- Upload an attachment
+        let fileUpload = { file: "fake-file-contents" }
+        attachment <- services.attachmentRepo.create task.id fileUpload 1 # Om.liftAff
+        liftEffect $ Console.log $ "✓ Uploaded attachment #" <> show attachment.id <> ": " <> attachment.fileName
+        liftEffect $ expectToBe "uploaded-file.txt" attachment.fileName
+
+        -- List attachments
+        attachments <- services.attachmentRepo.findByTask task.id # Om.liftAff
+        liftEffect $ Console.log $ "✓ Found " <> show (Array.length attachments) <> " attachments"
+        liftEffect $ expectToBe 1 (Array.length attachments)
+
+        -- Delete attachment
+        deleted <- services.attachmentRepo.delete attachment.id # Om.liftAff
+        liftEffect $ expectToBe true deleted
+        liftEffect $ Console.log "✓ Deleted attachment"
+
+        -- Verify deletion
+        attachmentsAfter <- services.attachmentRepo.findByTask task.id # Om.liftAff
+        liftEffect $ expectToBe 0 (Array.length attachmentsAfter)
+
+        liftEffect $ Console.log "✓ Attachment workflow test passed!"

@@ -1,0 +1,340 @@
+module Test.ProjectTrackerLayers where
+
+import Prelude
+
+import Data.Array as Array
+import Data.Maybe (Maybe(..))
+import Data.Tuple.Nested (type (/\))
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Class (liftEffect)
+import Effect.Console as Console
+import Effect.Ref as Ref
+import Test.ProjectTrackerExample (Attachment, AttachmentRepo, AuthService, Comment, CommentRepo, CreateCommentRequest, CreateProjectRequest, CreateTaskRequest, FileUpload, PaginationParams, Priority, Project, ProjectRepo, ProjectStatus(..), Task, TaskFilterParams, TaskHistoryEntry, TaskHistoryRepo, TaskRepo, TaskStatus(..), UpdateProjectRequest, UpdateTaskRequest, User, UserRole(..))
+import Type.Function (type (#))
+import Yoga.Om (Om)
+import Yoga.Om as Om
+
+--------------------------------------------------------------------------------
+-- OmLayer Service Configuration and Layers
+--------------------------------------------------------------------------------
+
+-- | Application configuration
+type AppConfig =
+  { apiName :: String
+  , version :: String
+  }
+
+-- | Database configuration (placeholder for real DB)
+type DbConfig =
+  { connectionString :: String
+  , poolSize :: Int
+  }
+
+-- | All services provided by the application
+type Services =
+  { projectRepo :: ProjectRepo
+  , taskRepo :: TaskRepo
+  , commentRepo :: CommentRepo
+  , attachmentRepo :: AttachmentRepo
+  , taskHistoryRepo :: TaskHistoryRepo
+  , authService :: AuthService
+  }
+
+--------------------------------------------------------------------------------
+-- Repository Implementations (In-Memory)
+--------------------------------------------------------------------------------
+
+makeInMemoryProjectRepo :: Effect ProjectRepo
+makeInMemoryProjectRepo = do
+  projectsRef <- Ref.new []
+  pure
+    { findAll: \_ -> Ref.read projectsRef # liftEffect
+    , findById: \id -> do
+        projects <- Ref.read projectsRef # liftEffect
+        pure $ Array.find (\p -> p.id == id) projects
+    , create: \req userId -> do
+        projects <- Ref.read projectsRef # liftEffect
+        let
+          newId = Array.length projects + 1
+          now = 0 -- placeholder timestamp
+          newProject =
+            { id: newId
+            , name: req.name
+            , description: req.description
+            , status: Active
+            , createdAt: now
+            , createdBy: userId
+            }
+        Ref.write (Array.snoc projects newProject) projectsRef # liftEffect
+        pure newProject
+    , update: \id req -> do
+        projects <- Ref.read projectsRef # liftEffect
+        case Array.findIndex (\p -> p.id == id) projects of
+          Nothing -> pure Nothing
+          Just idx -> case Array.index projects idx of
+            Nothing -> pure Nothing
+            Just project -> do
+              let
+                updated = project
+                  { name = case req.name of
+                      Nothing -> project.name
+                      Just n -> n
+                  , description = case req.description of
+                      Nothing -> project.description
+                      Just d -> d
+                  }
+              let
+                updatedProjects = case Array.updateAt idx updated projects of
+                  Nothing -> projects
+                  Just arr -> arr
+              Ref.write updatedProjects projectsRef # liftEffect
+              pure $ Just updated
+    , archive: \id -> do
+        projects <- Ref.read projectsRef # liftEffect
+        case Array.findIndex (\p -> p.id == id) projects of
+          Nothing -> pure false
+          Just _ -> do
+            let filtered = Array.filter (\p -> p.id /= id) projects
+            Ref.write filtered projectsRef # liftEffect
+            pure true
+    }
+
+makeInMemoryTaskRepo :: Effect TaskRepo
+makeInMemoryTaskRepo = do
+  tasksRef <- Ref.new []
+  pure
+    { findByProject: \projectId _filters -> do
+        tasks <- Ref.read tasksRef # liftEffect
+        pure $ Array.filter (\t -> t.projectId == projectId) tasks
+    , findById: \id -> do
+        tasks <- Ref.read tasksRef # liftEffect
+        pure $ Array.find (\t -> t.id == id) tasks
+    , create: \projectId req userId -> do
+        tasks <- Ref.read tasksRef # liftEffect
+        let
+          newId = Array.length tasks + 1
+          now = 0 -- placeholder timestamp
+          newTask =
+            { id: newId
+            , projectId
+            , title: req.title
+            , description: req.description
+            , status: Todo
+            , priority: req.priority
+            , assigneeId: req.assigneeId
+            , createdAt: now
+            , updatedAt: now
+            , dueDate: req.dueDate
+            }
+        Ref.write (Array.snoc tasks newTask) tasksRef # liftEffect
+        pure newTask
+    , update: \id req -> do
+        tasks <- Ref.read tasksRef # liftEffect
+        case Array.findIndex (\t -> t.id == id) tasks of
+          Nothing -> pure Nothing
+          Just idx -> case Array.index tasks idx of
+            Nothing -> pure Nothing
+            Just task -> do
+              let
+                now = 0 -- placeholder timestamp
+                updated = task
+                  { title = case req.title of
+                      Nothing -> task.title
+                      Just t -> t
+                  , description = case req.description of
+                      Nothing -> task.description
+                      Just d -> d
+                  , status = case req.status of
+                      Nothing -> task.status
+                      Just s -> s
+                  , priority = case req.priority of
+                      Nothing -> task.priority
+                      Just p -> p
+                  , assigneeId = case req.assigneeId of
+                      Nothing -> task.assigneeId
+                      Just a -> Just a
+                  , updatedAt = now
+                  }
+              let
+                updatedTasks = case Array.updateAt idx updated tasks of
+                  Nothing -> tasks
+                  Just arr -> arr
+              Ref.write updatedTasks tasksRef # liftEffect
+              pure $ Just updated
+    , delete: \id -> do
+        tasks <- Ref.read tasksRef # liftEffect
+        case Array.findIndex (\t -> t.id == id) tasks of
+          Nothing -> pure false
+          Just _ -> do
+            let filtered = Array.filter (\t -> t.id /= id) tasks
+            Ref.write filtered tasksRef # liftEffect
+            pure true
+    , assign: \taskId assigneeId -> do
+        tasks <- Ref.read tasksRef # liftEffect
+        case Array.findIndex (\t -> t.id == taskId) tasks of
+          Nothing -> pure Nothing
+          Just idx -> case Array.index tasks idx of
+            Nothing -> pure Nothing
+            Just task -> do
+              let
+                now = 0 -- placeholder timestamp
+                updated = task { assigneeId = Just assigneeId, updatedAt = now }
+                updatedTasks = case Array.updateAt idx updated tasks of
+                  Nothing -> tasks
+                  Just arr -> arr
+              Ref.write updatedTasks tasksRef # liftEffect
+              pure $ Just updated
+    }
+
+makeInMemoryCommentRepo :: Effect CommentRepo
+makeInMemoryCommentRepo = do
+  commentsRef <- Ref.new []
+  pure
+    { findByTask: \taskId _pagination -> do
+        comments <- Ref.read commentsRef # liftEffect
+        pure $ Array.filter (\c -> c.taskId == taskId) comments
+    , create: \taskId req authorId -> do
+        comments <- Ref.read commentsRef # liftEffect
+        let
+          newId = Array.length comments + 1
+          now = 0 -- placeholder timestamp
+          newComment =
+            { id: newId
+            , taskId
+            , authorId
+            , content: req.content
+            , createdAt: now
+            }
+        Ref.write (Array.snoc comments newComment) commentsRef # liftEffect
+        pure newComment
+    }
+
+makeInMemoryAttachmentRepo :: Effect AttachmentRepo
+makeInMemoryAttachmentRepo = do
+  attachmentsRef <- Ref.new []
+  pure
+    { findByTask: \taskId -> do
+        attachments <- Ref.read attachmentsRef # liftEffect
+        pure $ Array.filter (\a -> a.taskId == taskId) attachments
+    , create: \taskId upload userId -> do
+        attachments <- Ref.read attachmentsRef # liftEffect
+        let
+          newId = Array.length attachments + 1
+          now = 0 -- placeholder timestamp
+          newAttachment =
+            { id: newId
+            , taskId
+            , fileName: "uploaded-file.txt"
+            , fileSize: 1024
+            , contentType: "text/plain"
+            , uploadedBy: userId
+            , uploadedAt: now
+            , url: "/attachments/" <> show newId
+            }
+        Ref.write (Array.snoc attachments newAttachment) attachmentsRef # liftEffect
+        pure newAttachment
+    , delete: \id -> do
+        attachments <- Ref.read attachmentsRef # liftEffect
+        case Array.findIndex (\a -> a.id == id) attachments of
+          Nothing -> pure false
+          Just _ -> do
+            let filtered = Array.filter (\a -> a.id /= id) attachments
+            Ref.write filtered attachmentsRef # liftEffect
+            pure true
+    }
+
+makeInMemoryTaskHistoryRepo :: Effect TaskHistoryRepo
+makeInMemoryTaskHistoryRepo = do
+  historyRef <- Ref.new []
+  pure
+    { findByTask: \taskId -> do
+        history <- Ref.read historyRef # liftEffect
+        pure $ Array.filter (\h -> h.taskId == taskId) history
+    , recordChange: \taskId userId field oldVal newVal -> do
+        history <- Ref.read historyRef # liftEffect
+        let
+          newId = Array.length history + 1
+          now = 0 -- placeholder timestamp
+          entry =
+            { id: newId
+            , taskId
+            , changedBy: userId
+            , changedAt: now
+            , field
+            , oldValue: oldVal
+            , newValue: newVal
+            }
+        Ref.write (Array.snoc history entry) historyRef # liftEffect
+        pure entry
+    }
+
+makeInMemoryAuthService :: Effect AuthService
+makeInMemoryAuthService = pure
+  { authenticate: \token -> pure $ Just
+      { id: 1
+      , username: "testuser"
+      , email: "test@example.com"
+      , fullName: "Test User"
+      , role: Developer
+      }
+  , authorize: \user action -> pure true
+  }
+
+--------------------------------------------------------------------------------
+-- Om-based Service Initialization (OmLayer Pattern)
+--------------------------------------------------------------------------------
+
+-- | Initialize all services with configuration from Om context
+-- This demonstrates the OmLayer pattern using Om monad for dependency injection
+initializeServices :: forall r. Om (appConfig :: AppConfig, dbConfig :: DbConfig # r) Unit Services
+initializeServices = do
+  { appConfig, dbConfig } <- Om.ask
+
+  -- Log initialization
+  liftEffect $ Console.log $ "Initializing " <> appConfig.apiName <> " v" <> appConfig.version
+  liftEffect $ Console.log $ "Database: " <> dbConfig.connectionString <> " (pool size: " <> show dbConfig.poolSize <> ")"
+
+  -- Initialize all repositories (these would connect to real DBs in production)
+  projectRepo <- makeInMemoryProjectRepo # liftEffect
+  taskRepo <- makeInMemoryTaskRepo # liftEffect
+  commentRepo <- makeInMemoryCommentRepo # liftEffect
+  attachmentRepo <- makeInMemoryAttachmentRepo # liftEffect
+  taskHistoryRepo <- makeInMemoryTaskHistoryRepo # liftEffect
+  authService <- makeInMemoryAuthService # liftEffect
+
+  liftEffect $ Console.log "✓ All services initialized"
+
+  pure
+    { projectRepo
+    , taskRepo
+    , commentRepo
+    , attachmentRepo
+    , taskHistoryRepo
+    , authService
+    }
+
+-- | Run the application with all services initialized
+-- This is the main entry point that:
+-- 1. Takes configuration (appConfig, dbConfig)
+-- 2. Initializes all services (repositories, auth)
+-- 3. Runs the action with services in the Om context
+-- 4. Handles any exceptions
+runWithServices :: forall a. AppConfig -> DbConfig -> Om Services Unit a -> Aff a
+runWithServices appConfig dbConfig action = do
+  let configContext = { appConfig, dbConfig }
+  -- First initialize services with config context
+  services <- Om.runOm configContext
+    { exception: \_ -> pure
+        { projectRepo: bottom
+        , taskRepo: bottom
+        , commentRepo: bottom
+        , attachmentRepo: bottom
+        , taskHistoryRepo: bottom
+        , authService: bottom
+        }
+    }
+    initializeServices
+
+  -- Then run the action with services context
+  Om.runOm services { exception: \_ -> pure unit } action

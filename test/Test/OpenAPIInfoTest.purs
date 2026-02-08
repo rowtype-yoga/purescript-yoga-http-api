@@ -2,7 +2,6 @@ module Test.OpenAPIInfoTest where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
 import Yoga.HTTP.API.Route (GET, Route, buildOpenAPISpec)
@@ -21,9 +20,7 @@ testInfoDescription = describe "OpenAPI Info - Description" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Just "This is a test API for demonstrating OpenAPI info enhancements"
-        , contact: Nothing
-        , license: Nothing
+        , description: "This is a test API for demonstrating OpenAPI info enhancements"
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"description\":\"This is a test API for demonstrating OpenAPI info enhancements\"") json)
@@ -33,9 +30,6 @@ testInfoDescription = describe "OpenAPI Info - Description" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     -- Check that description is not in the info object (it will appear in responses, which is required by OpenAPI)
@@ -49,13 +43,11 @@ testInfoContact = describe "OpenAPI Info - Contact" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Just
-            { name: Just "API Support"
-            , url: Just "https://api.example.com/support"
-            , email: Just "support@example.com"
+        , contact:
+            { name: "API Support"
+            , url: "https://api.example.com/support"
+            , email: "support@example.com"
             }
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"contact\"") json)
@@ -68,13 +60,7 @@ testInfoContact = describe "OpenAPI Info - Contact" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Just
-            { name: Just "API Team"
-            , url: Nothing
-            , email: Nothing
-            }
-        , license: Nothing
+        , contact: { name: "API Team" }
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"contact\"") json)
@@ -85,13 +71,7 @@ testInfoContact = describe "OpenAPI Info - Contact" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Just
-            { name: Nothing
-            , url: Nothing
-            , email: Just "info@example.com"
-            }
-        , license: Nothing
+        , contact: { email: "info@example.com" }
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"contact\"") json)
@@ -102,13 +82,10 @@ testInfoContact = describe "OpenAPI Info - Contact" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Just
-            { name: Just "Support Team"
-            , url: Just "https://support.example.com"
-            , email: Nothing
+        , contact:
+            { name: "Support Team"
+            , url: "https://support.example.com"
             }
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"contact\"") json)
@@ -120,9 +97,6 @@ testInfoContact = describe "OpenAPI Info - Contact" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe false (String.contains (String.Pattern "\"contact\"") json)
@@ -134,9 +108,7 @@ testInfoLicense = describe "OpenAPI Info - License" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Just { name: "MIT", url: Nothing }
+        , license: { name: "MIT" }
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"license\"") json)
@@ -147,11 +119,9 @@ testInfoLicense = describe "OpenAPI Info - License" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Just
+        , license:
             { name: "Apache 2.0"
-            , url: Just "https://www.apache.org/licenses/LICENSE-2.0.html"
+            , url: "https://www.apache.org/licenses/LICENSE-2.0.html"
             }
         }
       json = writeJSON spec
@@ -164,9 +134,6 @@ testInfoLicense = describe "OpenAPI Info - License" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Test API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe false (String.contains (String.Pattern "\"license\"") json)
@@ -178,15 +145,15 @@ testInfoAllFields = describe "OpenAPI Info - All Fields Together" do
       spec = buildOpenAPISpec @SimpleAPI
         { title: "Complete API"
         , version: "2.0.0"
-        , description: Just "A comprehensive API with full metadata"
-        , contact: Just
-            { name: Just "API Team"
-            , url: Just "https://example.com/contact"
-            , email: Just "api@example.com"
+        , description: "A comprehensive API with full metadata"
+        , contact:
+            { name: "API Team"
+            , url: "https://example.com/contact"
+            , email: "api@example.com"
             }
-        , license: Just
+        , license:
             { name: "MIT"
-            , url: Just "https://opensource.org/licenses/MIT"
+            , url: "https://opensource.org/licenses/MIT"
             }
         }
       json = writeJSON spec

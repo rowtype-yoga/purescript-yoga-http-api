@@ -3,11 +3,11 @@ module Test.ComprehensiveExample where
 import Prelude
 
 import Data.Array as Array
-import Data.Maybe (Maybe(..))
 import Effect (Effect)
+import Literals.Undefined (undefined)
 import Type.Function (type (#))
 import Yoga.HTTP.API.Path (type (:), type (/), type (:?))
-import Yoga.HTTP.API.Route (GET, POST, PUT, DELETE, Route, buildOpenAPISpec)
+import Yoga.HTTP.API.Route (GET, POST, PUT, DELETE, Route, buildOpenAPISpec, NoRequest)
 import Yoga.HTTP.API.Route.Auth (BearerToken, ApiKeyHeader, BasicAuth)
 import Yoga.HTTP.API.Route.Encoding (JSON, PlainText, XML)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, ExampleValue, Examples, Schema)
@@ -27,7 +27,7 @@ type ComprehensiveAPI =
   , -- List users with query parameters
     listUsers ::
       Route GET ("users" :? { limit :: Int # Example "10", offset :: Int # Example "0" })
-        {}
+        NoRequest
         (ok :: { body :: Array User })
 
   , -- POST with JSON body and schema
@@ -53,13 +53,13 @@ type ComprehensiveAPI =
   , -- Multiple content types - XML
     exportUser ::
       Route GET ("users" / "id" : Int / "export")
-        {}
+        NoRequest
         (ok :: { body :: XML User })
 
   , -- Plain text response
     healthCheck ::
       Route GET "health"
-        {}
+        NoRequest
         (ok :: { body :: PlainText String })
 
   , -- API Key authentication
@@ -77,7 +77,7 @@ type ComprehensiveAPI =
   , -- Path with examples
     getUserPosts ::
       Route GET ("users" / "userId" : (Int # Examples (alice :: ExampleValue "1", bob :: ExampleValue "2")) / "posts")
-        {}
+        NoRequest
         (ok :: { body :: Array Post })
   }
 
@@ -129,15 +129,15 @@ testComprehensiveExample = describe "Comprehensive API Example" do
       spec = buildOpenAPISpec @ComprehensiveAPI
         { title: "Comprehensive Example API"
         , version: "1.0.0"
-        , description: Just "A complete example showcasing yoga-http-api features including authentication, multiple content types, metadata, schemas, and examples"
-        , contact: Just
-            { name: Just "API Team"
-            , email: Just "api@example.com"
-            , url: Just "https://example.com/support"
+        , description: "A complete example showcasing yoga-http-api features including authentication, multiple content types, metadata, schemas, and examples"
+        , contact:
+            { name: "API Team"
+            , email: "api@example.com"
+            , url: "https://example.com/support"
             }
-        , license: Just
+        , license:
             { name: "MIT"
-            , url: Just "https://opensource.org/licenses/MIT"
+            , url: "https://opensource.org/licenses/MIT"
             }
         }
       json = writeJSON spec

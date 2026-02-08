@@ -1,5 +1,6 @@
 module Yoga.HTTP.API.Route.Handler
   ( HandlerFn
+  , NoRequest
   , class DefaultRequestFields
   , class DefaultRequestFieldsRL
   , class SegmentPathParams
@@ -20,6 +21,19 @@ import Prim.Row as Row
 import Prim.RowList as RL
 import Yoga.HTTP.API.Path (Path, PathCons, Capture, Param, QueryParams, Required)
 import Yoga.HTTP.API.Route.Encoding (JSON, NoBody)
+
+--------------------------------------------------------------------------------
+-- NoRequest: Type alias for empty request (no headers, cookies, or body)
+--------------------------------------------------------------------------------
+
+-- | Type alias for routes with no request data (no headers, cookies, or body).
+-- |
+-- | Usage:
+-- |   Route GET "health" NoRequest (ok :: { body :: String })
+-- |
+-- | Equivalent to:
+-- |   Route GET "health" {} (ok :: { body :: String })
+type NoRequest = Record ()
 
 --------------------------------------------------------------------------------
 -- Handler Type

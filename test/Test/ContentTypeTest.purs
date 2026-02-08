@@ -24,9 +24,6 @@ testRequestContentTypes = describe "Request Content Types" do
       spec = buildOpenAPISpec @{ createUser :: Route POST "users" { body :: JSON User } (ok :: { body :: User }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/json\"") json)
@@ -37,9 +34,6 @@ testRequestContentTypes = describe "Request Content Types" do
       spec = buildOpenAPISpec @{ createUser :: Route POST "users" { body :: FormData User } (ok :: { body :: JSON User }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/x-www-form-urlencoded\"") json)
@@ -50,9 +44,6 @@ testRequestContentTypes = describe "Request Content Types" do
       spec = buildOpenAPISpec @{ uploadFile :: Route POST "upload" { body :: MultipartFormData FileUpload } (ok :: { body :: { success :: Boolean } }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"multipart/form-data\"") json)
@@ -62,9 +53,6 @@ testRequestContentTypes = describe "Request Content Types" do
       spec = buildOpenAPISpec @{ echo :: Route POST "echo" { body :: PlainText String } (ok :: { body :: PlainText String }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"text/plain\"") json)
@@ -74,9 +62,6 @@ testRequestContentTypes = describe "Request Content Types" do
       spec = buildOpenAPISpec @{ updateDoc :: Route PUT "document" { body :: XML XmlDocument } (ok :: { body :: XML XmlDocument }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/xml\"") json)
@@ -86,9 +71,6 @@ testRequestContentTypes = describe "Request Content Types" do
       spec = buildOpenAPISpec @{ customEndpoint :: Route POST "custom" { body :: CustomContentType "application/vnd.api+json" User } (ok :: { body :: User }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/vnd.api+json\"") json)
@@ -100,9 +82,6 @@ testResponseContentTypes = describe "Response Content Types" do
       spec = buildOpenAPISpec @{ getUser :: Route GET "users" {} (ok :: { body :: JSON User }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/json\"") json)
@@ -112,9 +91,6 @@ testResponseContentTypes = describe "Response Content Types" do
       spec = buildOpenAPISpec @{ getText :: Route GET "text" {} (ok :: { body :: PlainText String }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"text/plain\"") json)
@@ -124,9 +100,6 @@ testResponseContentTypes = describe "Response Content Types" do
       spec = buildOpenAPISpec @{ getDoc :: Route GET "document" {} (ok :: { body :: XML XmlDocument }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/xml\"") json)
@@ -136,9 +109,6 @@ testResponseContentTypes = describe "Response Content Types" do
       spec = buildOpenAPISpec @{ customGet :: Route GET "custom" {} (ok :: { body :: CustomContentType "application/vnd.api+json" User }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/vnd.api+json\"") json)
@@ -148,9 +118,6 @@ testResponseContentTypes = describe "Response Content Types" do
       spec = buildOpenAPISpec @{ getUser :: Route GET "users" {} (ok :: { body :: User }) }
         { title: "API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/json\"") json)
@@ -168,9 +135,6 @@ testMixedContentTypes = describe "Mixed Content Types in API" do
         }
         { title: "Multi-Content API"
         , version: "1.0.0"
-        , description: Nothing
-        , contact: Nothing
-        , license: Nothing
         }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"application/json\"") json)

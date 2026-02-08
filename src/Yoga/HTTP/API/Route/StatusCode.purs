@@ -10,7 +10,7 @@ module Yoga.HTTP.API.Route.StatusCode
 
 import Prelude
 
-import Type.Proxy (Proxy(..))
+import Type.Proxy (Proxy)
 import Data.Newtype (class Newtype)
 import Prim.TypeError (class Fail, Text, Above, Quote, Beside)
 

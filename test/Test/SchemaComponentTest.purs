@@ -30,20 +30,20 @@ testSchemaComponents :: Effect ViTest
 testSchemaComponents = describe "Schema Components" do
   _ <- test "generates $ref in response body" do
     let
-      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0" }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"$ref\":\"#/components/schemas/User\"") json)
 
   _ <- test "generates schema definition in components" do
     let
-      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0" }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "components") json)
     expectToBe true (String.contains (String.Pattern "\"schemas\"") json)
 
   _ <- test "defines User schema with properties" do
     let
-      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0" }
       json = writeJSON spec
     -- Schema should be in components, not inline
     expectToBe true (String.contains (String.Pattern "\"User\"") json)
@@ -52,6 +52,6 @@ testSchemaComponents = describe "Schema Components" do
 
   test "collects nested schemas from arrays" do
     let
-      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+      spec = buildOpenAPISpec @SchemaAPI { title: "Test", version: "1.0.0" }
       json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"Post\"") json)

@@ -82,6 +82,9 @@ import Data.Array as Array
 import Data.Foldable (foldl)
 import Data.Maybe (Maybe(..), maybe)
 import Data.String as String
+import Data.Identity (Identity)
+import Data.Undefined.NoProblem (Opt, toMaybe, undefined)
+import Yoga.HTTP.API.UnionTrick (UndefinedOr, uorToMaybe, class CoerceFields, coerceFields)
 import Data.String.Regex (replace)
 import Data.String.Regex.Flags (global)
 import Data.String.Regex.Unsafe (unsafeRegex)
@@ -97,7 +100,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, ApiKeyCookie, DigestAuth)
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, XML, CustomContentType, NoBody)
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
-import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, Callback, Examples, Link, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasExamples, examples, class HasOperationMetadata, operationMetadata, class HasLinks, links)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, Callback, Examples, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasExamples, examples)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.HTTP.API.Route.Response (class ToResponse)
 import Yoga.HTTP.API.Route.StatusCode (class StatusCodeMap, statusCodeFor, statusCodeToString)
@@ -770,6 +773,7 @@ else instance
 --------------------------------------------------------------------------------
 
 -- | Render a PureScript type as an OpenAPI JSON schema
+class RenderJSONSchema :: forall k. k -> Constraint
 class RenderJSONSchema ty where
   renderJSONSchema :: Proxy ty -> Foreign
 
@@ -1891,35 +1895,67 @@ type ServerObject =
   , description :: Maybe String
   }
 
+-- | Row type for contact information (all fields will be coerced)
+type ContactInfoR =
+  ( name :: String
+  , url :: String
+  , email :: String
+  )
+
+-- | Contact info record
+type ContactInfo = { | ContactInfoR }
+
+-- | Row type for license information
+type LicenseInfoR =
+  ( name :: String
+  , url :: String
+  )
+
+-- | License info record
+type LicenseInfo = { | LicenseInfoR }
+
+-- | Row type for OpenAPI info object
+type OpenAPIInfoR f =
+  ( title :: String
+  , version :: String
+  , description :: f String
+  , contact :: f ContactInfo
+  , license :: f LicenseInfo
+  )
+
+-- | OpenAPI info with all required fields
+type OpenAPIInfo = { | OpenAPIInfoR Identity }
+
+-- | OpenAPI info with optional fields (using UndefinedOr)
+type OpenAPIInfoUor = { | OpenAPIInfoR UndefinedOr }
+
 -- | Build a complete OpenAPI 3.0 spec from a type-level collection of routes.
 -- |
 -- | Examples:
--- |   -- Basic usage:
+-- |   -- Basic usage (omit all optional fields):
 -- |   buildOpenAPISpec @MyAPI
 -- |     { title: "My API", version: "1.0.0" }
 -- |
--- |   -- With servers:
--- |   buildOpenAPISpec' @MyAPI
+-- |   -- With optional fields:
+-- |   buildOpenAPISpec @MyAPI
 -- |     { title: "My API"
 -- |     , version: "1.0.0"
--- |     , servers: Just
--- |         [ { url: "https://api.example.com", description: Just "Production server" }
--- |         , { url: "https://staging-api.example.com", description: Just "Staging server" }
--- |         ]
+-- |     , description: "A comprehensive API"
+-- |     , contact: { name: "Support", email: "api@example.com" }
 -- |     }
+-- |
+-- | Note: Uses the CoerceFields typeclass for type-safe coercion of optional fields.
+-- | For nested records (contact/license), use `undefined` from Literals.Undefined for optional fields.
+-- | The typeclass verifies at compile-time that each field can be safely coerced.
 buildOpenAPISpec
-  :: forall @routes
+  :: forall @routes r
    . CollectOperations routes
   => CollectRouteSchemas routes
   => ValidateSchemaNames routes
-  => { title :: String
-     , version :: String
-     , description :: Maybe String
-     , contact :: Maybe { name :: Maybe String, url :: Maybe String, email :: Maybe String }
-     , license :: Maybe { name :: String, url :: Maybe String }
-     }
+  => CoerceFields r (OpenAPIInfoR UndefinedOr)
+  => { | r }
   -> OpenAPISpec
-buildOpenAPISpec info = buildOpenAPISpec' @routes info { servers: Nothing }
+buildOpenAPISpec given = buildOpenAPISpec' @routes (coerceFields given) { servers: undefined }
 
 -- | Build a complete OpenAPI 3.0 spec with optional servers configuration.
 buildOpenAPISpec'
@@ -1927,13 +1963,8 @@ buildOpenAPISpec'
    . CollectOperations routes
   => CollectRouteSchemas routes
   => ValidateSchemaNames routes
-  => { title :: String
-     , version :: String
-     , description :: Maybe String
-     , contact :: Maybe { name :: Maybe String, url :: Maybe String, email :: Maybe String }
-     , license :: Maybe { name :: String, url :: Maybe String }
-     }
-  -> { servers :: Maybe (Array ServerObject) }
+  => OpenAPIInfoUor
+  -> { servers :: Opt (Array ServerObject) }
   -> OpenAPISpec
 buildOpenAPISpec' info config =
   let
@@ -1954,48 +1985,25 @@ buildOpenAPISpec' info config =
       [ Tuple "title" (writeImpl info.title)
       , Tuple "version" (writeImpl info.version)
       ]
-    infoWithDescription = case info.description of
-      Nothing -> infoBase
-      Just desc -> FObject.insert "description" (writeImpl desc) infoBase
-    infoWithContact = case info.contact of
-      Nothing -> infoWithDescription
-      Just contact ->
-        let
-          contactBase = FObject.empty
-          withName = case contact.name of
-            Nothing -> contactBase
-            Just name -> FObject.insert "name" (writeImpl name) contactBase
-          withUrl = case contact.url of
-            Nothing -> withName
-            Just url -> FObject.insert "url" (writeImpl url) withName
-          withEmail = case contact.email of
-            Nothing -> withUrl
-            Just email -> FObject.insert "email" (writeImpl email) withUrl
-        in
-          if FObject.isEmpty withEmail then infoWithDescription
-          else FObject.insert "contact" (unsafeCoerce withEmail) infoWithDescription
-    infoWithLicense = case info.license of
-      Nothing -> infoWithContact
-      Just license ->
-        let
-          licenseBase = FObject.singleton "name" (writeImpl license.name)
-          licenseWithUrl = case license.url of
-            Nothing -> licenseBase
-            Just url -> FObject.insert "url" (writeImpl url) licenseBase
-        in
-          FObject.insert "license" (unsafeCoerce licenseWithUrl) infoWithContact
+    infoWithDescription = maybe infoBase (\desc -> FObject.insert "description" (writeImpl desc) infoBase) (uorToMaybe info.description)
+    infoWithContact = maybe infoWithDescription
+      ( \contact ->
+          FObject.insert "contact" (writeImpl contact) infoWithDescription
+      )
+      (uorToMaybe info.contact)
+    infoWithLicense = maybe infoWithContact
+      ( \license ->
+          FObject.insert "license" (writeImpl license) infoWithContact
+      )
+      (uorToMaybe info.license)
 
     baseSpec = FObject.fromFoldable
       [ Tuple "openapi" (unsafeCoerce "3.0.0")
       , Tuple "info" (unsafeCoerce infoWithLicense)
       , Tuple "paths" (unsafeCoerce paths)
       ]
-    withComponents = case components of
-      Nothing -> baseSpec
-      Just c -> FObject.insert "components" c baseSpec
-    withServers = case config.servers of
-      Nothing -> withComponents
-      Just servers -> FObject.insert "servers" (writeImpl servers) withComponents
+    withComponents = maybe baseSpec (\c -> FObject.insert "components" c baseSpec) components
+    withServers = maybe withComponents (\servers -> FObject.insert "servers" (writeImpl servers) withComponents) (toMaybe config.servers)
   in
     unsafeCoerce $ withServers
 

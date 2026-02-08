@@ -378,250 +378,374 @@ respondNotModified =
 -- Status Code Helper Functions
 --------------------------------------------------------------------------------
 
+continue :: forall body r1. body -> Variant (continue :: Response () body | r1)
 continue = respondNoHeaders @"continue"
 
-continueWith = respondWith (Proxy :: Proxy "continue")
+continueWith :: forall headers body r1. Record headers -> body -> Variant (continue :: Response headers body | r1)
+continueWith headers body = respondWith (Proxy :: Proxy "continue") headers body
 
+switchingProtocols :: forall body r1. body -> Variant (switchingProtocols :: Response () body | r1)
 switchingProtocols = respondNoHeaders @"switchingProtocols"
 
-switchingProtocolsWith = respondWith (Proxy :: Proxy "switchingProtocols")
+switchingProtocolsWith :: forall headers body r1. Record headers -> body -> Variant (switchingProtocols :: Response headers body | r1)
+switchingProtocolsWith headers body = respondWith (Proxy :: Proxy "switchingProtocols") headers body
 
+processing :: forall body r1. body -> Variant (processing :: Response () body | r1)
 processing = respondNoHeaders @"processing"
 
-processingWith = respondWith (Proxy :: Proxy "processing")
+processingWith :: forall headers body r1. Record headers -> body -> Variant (processing :: Response headers body | r1)
+processingWith headers body = respondWith (Proxy :: Proxy "processing") headers body
 
+earlyHints :: forall body r1. body -> Variant (earlyHints :: Response () body | r1)
 earlyHints = respondNoHeaders @"earlyHints"
 
-earlyHintsWith = respondWith (Proxy :: Proxy "earlyHints")
+earlyHintsWith :: forall headers body r1. Record headers -> body -> Variant (earlyHints :: Response headers body | r1)
+earlyHintsWith headers body = respondWith (Proxy :: Proxy "earlyHints") headers body
 
+ok :: forall body r1. body -> Variant (ok :: Response () body | r1)
 ok = respondNoHeaders @"ok"
 
-okWith = respondWith (Proxy :: Proxy "ok")
+okWith :: forall headers body r1. Record headers -> body -> Variant (ok :: Response headers body | r1)
+okWith headers body = respondWith (Proxy :: Proxy "ok") headers body
 
+created :: forall body r1. body -> Variant (created :: Response () body | r1)
 created = respondNoHeaders @"created"
 
-createdWith = respondWith (Proxy :: Proxy "created")
+createdWith :: forall headers body r1. Record headers -> body -> Variant (created :: Response headers body | r1)
+createdWith headers body = respondWith (Proxy :: Proxy "created") headers body
 
+accepted :: forall body r1. body -> Variant (accepted :: Response () body | r1)
 accepted = respondNoHeaders @"accepted"
 
-acceptedWith = respondWith (Proxy :: Proxy "accepted")
+acceptedWith :: forall headers body r1. Record headers -> body -> Variant (accepted :: Response headers body | r1)
+acceptedWith headers body = respondWith (Proxy :: Proxy "accepted") headers body
 
+nonAuthoritativeInformation :: forall body r1. body -> Variant (nonAuthoritativeInformation :: Response () body | r1)
 nonAuthoritativeInformation = respondNoHeaders @"nonAuthoritativeInformation"
 
-nonAuthoritativeInformationWith = respondWith (Proxy :: Proxy "nonAuthoritativeInformation")
+nonAuthoritativeInformationWith :: forall headers body r1. Record headers -> body -> Variant (nonAuthoritativeInformation :: Response headers body | r1)
+nonAuthoritativeInformationWith headers body = respondWith (Proxy :: Proxy "nonAuthoritativeInformation") headers body
 
+noContent :: forall body r1. body -> Variant (noContent :: Response () body | r1)
 noContent = respondNoHeaders @"noContent"
 
-noContentWith = respondWith (Proxy :: Proxy "noContent")
+noContentWith :: forall headers body r1. Record headers -> body -> Variant (noContent :: Response headers body | r1)
+noContentWith headers body = respondWith (Proxy :: Proxy "noContent") headers body
 
+resetContent :: forall body r1. body -> Variant (resetContent :: Response () body | r1)
 resetContent = respondNoHeaders @"resetContent"
 
-resetContentWith = respondWith (Proxy :: Proxy "resetContent")
+resetContentWith :: forall headers body r1. Record headers -> body -> Variant (resetContent :: Response headers body | r1)
+resetContentWith headers body = respondWith (Proxy :: Proxy "resetContent") headers body
 
+partialContent :: forall body r1. body -> Variant (partialContent :: Response () body | r1)
 partialContent = respondNoHeaders @"partialContent"
 
-partialContentWith = respondWith (Proxy :: Proxy "partialContent")
+partialContentWith :: forall headers body r1. Record headers -> body -> Variant (partialContent :: Response headers body | r1)
+partialContentWith headers body = respondWith (Proxy :: Proxy "partialContent") headers body
 
+multiStatus :: forall body r1. body -> Variant (multiStatus :: Response () body | r1)
 multiStatus = respondNoHeaders @"multiStatus"
 
-multiStatusWith = respondWith (Proxy :: Proxy "multiStatus")
+multiStatusWith :: forall headers body r1. Record headers -> body -> Variant (multiStatus :: Response headers body | r1)
+multiStatusWith headers body = respondWith (Proxy :: Proxy "multiStatus") headers body
 
+alreadyReported :: forall body r1. body -> Variant (alreadyReported :: Response () body | r1)
 alreadyReported = respondNoHeaders @"alreadyReported"
 
-alreadyReportedWith = respondWith (Proxy :: Proxy "alreadyReported")
+alreadyReportedWith :: forall headers body r1. Record headers -> body -> Variant (alreadyReported :: Response headers body | r1)
+alreadyReportedWith headers body = respondWith (Proxy :: Proxy "alreadyReported") headers body
 
+imUsed :: forall body r1. body -> Variant (imUsed :: Response () body | r1)
 imUsed = respondNoHeaders @"imUsed"
 
-imUsedWith = respondWith (Proxy :: Proxy "imUsed")
+imUsedWith :: forall headers body r1. Record headers -> body -> Variant (imUsed :: Response headers body | r1)
+imUsedWith headers body = respondWith (Proxy :: Proxy "imUsed") headers body
 
+multipleChoices :: forall body r1. body -> Variant (multipleChoices :: Response () body | r1)
 multipleChoices = respondNoHeaders @"multipleChoices"
 
-multipleChoicesWith = respondWith (Proxy :: Proxy "multipleChoices")
+multipleChoicesWith :: forall headers body r1. Record headers -> body -> Variant (multipleChoices :: Response headers body | r1)
+multipleChoicesWith headers body = respondWith (Proxy :: Proxy "multipleChoices") headers body
 
+movedPermanently :: forall body r1. body -> Variant (movedPermanently :: Response () body | r1)
 movedPermanently = respondNoHeaders @"movedPermanently"
 
-movedPermanentlyWith = respondWith (Proxy :: Proxy "movedPermanently")
+movedPermanentlyWith :: forall headers body r1. Record headers -> body -> Variant (movedPermanently :: Response headers body | r1)
+movedPermanentlyWith headers body = respondWith (Proxy :: Proxy "movedPermanently") headers body
 
+found :: forall body r1. body -> Variant (found :: Response () body | r1)
 found = respondNoHeaders @"found"
 
-foundWith = respondWith (Proxy :: Proxy "found")
+foundWith :: forall headers body r1. Record headers -> body -> Variant (found :: Response headers body | r1)
+foundWith headers body = respondWith (Proxy :: Proxy "found") headers body
 
+seeOther :: forall body r1. body -> Variant (seeOther :: Response () body | r1)
 seeOther = respondNoHeaders @"seeOther"
 
-seeOtherWith = respondWith (Proxy :: Proxy "seeOther")
+seeOtherWith :: forall headers body r1. Record headers -> body -> Variant (seeOther :: Response headers body | r1)
+seeOtherWith headers body = respondWith (Proxy :: Proxy "seeOther") headers body
 
+notModified :: forall body r1. body -> Variant (notModified :: Response () body | r1)
 notModified = respondNoHeaders @"notModified"
 
-notModifiedWith = respondWith (Proxy :: Proxy "notModified")
+notModifiedWith :: forall headers body r1. Record headers -> body -> Variant (notModified :: Response headers body | r1)
+notModifiedWith headers body = respondWith (Proxy :: Proxy "notModified") headers body
 
+useProxy :: forall body r1. body -> Variant (useProxy :: Response () body | r1)
 useProxy = respondNoHeaders @"useProxy"
 
-useProxyWith = respondWith (Proxy :: Proxy "useProxy")
+useProxyWith :: forall headers body r1. Record headers -> body -> Variant (useProxy :: Response headers body | r1)
+useProxyWith headers body = respondWith (Proxy :: Proxy "useProxy") headers body
 
+temporaryRedirect :: forall body r1. body -> Variant (temporaryRedirect :: Response () body | r1)
 temporaryRedirect = respondNoHeaders @"temporaryRedirect"
 
-temporaryRedirectWith = respondWith (Proxy :: Proxy "temporaryRedirect")
+temporaryRedirectWith :: forall headers body r1. Record headers -> body -> Variant (temporaryRedirect :: Response headers body | r1)
+temporaryRedirectWith headers body = respondWith (Proxy :: Proxy "temporaryRedirect") headers body
 
+permanentRedirect :: forall body r1. body -> Variant (permanentRedirect :: Response () body | r1)
 permanentRedirect = respondNoHeaders @"permanentRedirect"
 
-permanentRedirectWith = respondWith (Proxy :: Proxy "permanentRedirect")
+permanentRedirectWith :: forall headers body r1. Record headers -> body -> Variant (permanentRedirect :: Response headers body | r1)
+permanentRedirectWith headers body = respondWith (Proxy :: Proxy "permanentRedirect") headers body
 
+badRequest :: forall body r1. body -> Variant (badRequest :: Response () body | r1)
 badRequest = respondNoHeaders @"badRequest"
 
-badRequestWith = respondWith (Proxy :: Proxy "badRequest")
+badRequestWith :: forall headers body r1. Record headers -> body -> Variant (badRequest :: Response headers body | r1)
+badRequestWith headers body = respondWith (Proxy :: Proxy "badRequest") headers body
 
+unauthorized :: forall body r1. body -> Variant (unauthorized :: Response () body | r1)
 unauthorized = respondNoHeaders @"unauthorized"
 
-unauthorizedWith = respondWith (Proxy :: Proxy "unauthorized")
+unauthorizedWith :: forall headers body r1. Record headers -> body -> Variant (unauthorized :: Response headers body | r1)
+unauthorizedWith headers body = respondWith (Proxy :: Proxy "unauthorized") headers body
 
+paymentRequired :: forall body r1. body -> Variant (paymentRequired :: Response () body | r1)
 paymentRequired = respondNoHeaders @"paymentRequired"
 
-paymentRequiredWith = respondWith (Proxy :: Proxy "paymentRequired")
+paymentRequiredWith :: forall headers body r1. Record headers -> body -> Variant (paymentRequired :: Response headers body | r1)
+paymentRequiredWith headers body = respondWith (Proxy :: Proxy "paymentRequired") headers body
 
+forbidden :: forall body r1. body -> Variant (forbidden :: Response () body | r1)
 forbidden = respondNoHeaders @"forbidden"
 
-forbiddenWith = respondWith (Proxy :: Proxy "forbidden")
+forbiddenWith :: forall headers body r1. Record headers -> body -> Variant (forbidden :: Response headers body | r1)
+forbiddenWith headers body = respondWith (Proxy :: Proxy "forbidden") headers body
 
+notFound :: forall body r1. body -> Variant (notFound :: Response () body | r1)
 notFound = respondNoHeaders @"notFound"
 
-notFoundWith = respondWith (Proxy :: Proxy "notFound")
+notFoundWith :: forall headers body r1. Record headers -> body -> Variant (notFound :: Response headers body | r1)
+notFoundWith headers body = respondWith (Proxy :: Proxy "notFound") headers body
 
+methodNotAllowed :: forall body r1. body -> Variant (methodNotAllowed :: Response () body | r1)
 methodNotAllowed = respondNoHeaders @"methodNotAllowed"
 
-methodNotAllowedWith = respondWith (Proxy :: Proxy "methodNotAllowed")
+methodNotAllowedWith :: forall headers body r1. Record headers -> body -> Variant (methodNotAllowed :: Response headers body | r1)
+methodNotAllowedWith headers body = respondWith (Proxy :: Proxy "methodNotAllowed") headers body
 
+notAcceptable :: forall body r1. body -> Variant (notAcceptable :: Response () body | r1)
 notAcceptable = respondNoHeaders @"notAcceptable"
 
-notAcceptableWith = respondWith (Proxy :: Proxy "notAcceptable")
+notAcceptableWith :: forall headers body r1. Record headers -> body -> Variant (notAcceptable :: Response headers body | r1)
+notAcceptableWith headers body = respondWith (Proxy :: Proxy "notAcceptable") headers body
 
+proxyAuthenticationRequired :: forall body r1. body -> Variant (proxyAuthenticationRequired :: Response () body | r1)
 proxyAuthenticationRequired = respondNoHeaders @"proxyAuthenticationRequired"
 
-proxyAuthenticationRequiredWith = respondWith (Proxy :: Proxy "proxyAuthenticationRequired")
+proxyAuthenticationRequiredWith :: forall headers body r1. Record headers -> body -> Variant (proxyAuthenticationRequired :: Response headers body | r1)
+proxyAuthenticationRequiredWith headers body = respondWith (Proxy :: Proxy "proxyAuthenticationRequired") headers body
 
+requestTimeout :: forall body r1. body -> Variant (requestTimeout :: Response () body | r1)
 requestTimeout = respondNoHeaders @"requestTimeout"
 
-requestTimeoutWith = respondWith (Proxy :: Proxy "requestTimeout")
+requestTimeoutWith :: forall headers body r1. Record headers -> body -> Variant (requestTimeout :: Response headers body | r1)
+requestTimeoutWith headers body = respondWith (Proxy :: Proxy "requestTimeout") headers body
 
+conflict :: forall body r1. body -> Variant (conflict :: Response () body | r1)
 conflict = respondNoHeaders @"conflict"
 
-conflictWith = respondWith (Proxy :: Proxy "conflict")
+conflictWith :: forall headers body r1. Record headers -> body -> Variant (conflict :: Response headers body | r1)
+conflictWith headers body = respondWith (Proxy :: Proxy "conflict") headers body
 
+gone :: forall body r1. body -> Variant (gone :: Response () body | r1)
 gone = respondNoHeaders @"gone"
 
-goneWith = respondWith (Proxy :: Proxy "gone")
+goneWith :: forall headers body r1. Record headers -> body -> Variant (gone :: Response headers body | r1)
+goneWith headers body = respondWith (Proxy :: Proxy "gone") headers body
 
+lengthRequired :: forall body r1. body -> Variant (lengthRequired :: Response () body | r1)
 lengthRequired = respondNoHeaders @"lengthRequired"
 
-lengthRequiredWith = respondWith (Proxy :: Proxy "lengthRequired")
+lengthRequiredWith :: forall headers body r1. Record headers -> body -> Variant (lengthRequired :: Response headers body | r1)
+lengthRequiredWith headers body = respondWith (Proxy :: Proxy "lengthRequired") headers body
 
+preconditionFailed :: forall body r1. body -> Variant (preconditionFailed :: Response () body | r1)
 preconditionFailed = respondNoHeaders @"preconditionFailed"
 
-preconditionFailedWith = respondWith (Proxy :: Proxy "preconditionFailed")
+preconditionFailedWith :: forall headers body r1. Record headers -> body -> Variant (preconditionFailed :: Response headers body | r1)
+preconditionFailedWith headers body = respondWith (Proxy :: Proxy "preconditionFailed") headers body
 
+payloadTooLarge :: forall body r1. body -> Variant (payloadTooLarge :: Response () body | r1)
 payloadTooLarge = respondNoHeaders @"payloadTooLarge"
 
-payloadTooLargeWith = respondWith (Proxy :: Proxy "payloadTooLarge")
+payloadTooLargeWith :: forall headers body r1. Record headers -> body -> Variant (payloadTooLarge :: Response headers body | r1)
+payloadTooLargeWith headers body = respondWith (Proxy :: Proxy "payloadTooLarge") headers body
 
+uriTooLong :: forall body r1. body -> Variant (uriTooLong :: Response () body | r1)
 uriTooLong = respondNoHeaders @"uriTooLong"
 
-uriTooLongWith = respondWith (Proxy :: Proxy "uriTooLong")
+uriTooLongWith :: forall headers body r1. Record headers -> body -> Variant (uriTooLong :: Response headers body | r1)
+uriTooLongWith headers body = respondWith (Proxy :: Proxy "uriTooLong") headers body
 
+unsupportedMediaType :: forall body r1. body -> Variant (unsupportedMediaType :: Response () body | r1)
 unsupportedMediaType = respondNoHeaders @"unsupportedMediaType"
 
-unsupportedMediaTypeWith = respondWith (Proxy :: Proxy "unsupportedMediaType")
+unsupportedMediaTypeWith :: forall headers body r1. Record headers -> body -> Variant (unsupportedMediaType :: Response headers body | r1)
+unsupportedMediaTypeWith headers body = respondWith (Proxy :: Proxy "unsupportedMediaType") headers body
 
+rangeNotSatisfiable :: forall body r1. body -> Variant (rangeNotSatisfiable :: Response () body | r1)
 rangeNotSatisfiable = respondNoHeaders @"rangeNotSatisfiable"
 
-rangeNotSatisfiableWith = respondWith (Proxy :: Proxy "rangeNotSatisfiable")
+rangeNotSatisfiableWith :: forall headers body r1. Record headers -> body -> Variant (rangeNotSatisfiable :: Response headers body | r1)
+rangeNotSatisfiableWith headers body = respondWith (Proxy :: Proxy "rangeNotSatisfiable") headers body
 
+expectationFailed :: forall body r1. body -> Variant (expectationFailed :: Response () body | r1)
 expectationFailed = respondNoHeaders @"expectationFailed"
 
-expectationFailedWith = respondWith (Proxy :: Proxy "expectationFailed")
+expectationFailedWith :: forall headers body r1. Record headers -> body -> Variant (expectationFailed :: Response headers body | r1)
+expectationFailedWith headers body = respondWith (Proxy :: Proxy "expectationFailed") headers body
 
+imATeapot :: forall body r1. body -> Variant (imATeapot :: Response () body | r1)
 imATeapot = respondNoHeaders @"imATeapot"
 
-imATeapotWith = respondWith (Proxy :: Proxy "imATeapot")
+imATeapotWith :: forall headers body r1. Record headers -> body -> Variant (imATeapot :: Response headers body | r1)
+imATeapotWith headers body = respondWith (Proxy :: Proxy "imATeapot") headers body
 
+misdirectedRequest :: forall body r1. body -> Variant (misdirectedRequest :: Response () body | r1)
 misdirectedRequest = respondNoHeaders @"misdirectedRequest"
 
-misdirectedRequestWith = respondWith (Proxy :: Proxy "misdirectedRequest")
+misdirectedRequestWith :: forall headers body r1. Record headers -> body -> Variant (misdirectedRequest :: Response headers body | r1)
+misdirectedRequestWith headers body = respondWith (Proxy :: Proxy "misdirectedRequest") headers body
 
+unprocessableEntity :: forall body r1. body -> Variant (unprocessableEntity :: Response () body | r1)
 unprocessableEntity = respondNoHeaders @"unprocessableEntity"
 
-unprocessableEntityWith = respondWith (Proxy :: Proxy "unprocessableEntity")
+unprocessableEntityWith :: forall headers body r1. Record headers -> body -> Variant (unprocessableEntity :: Response headers body | r1)
+unprocessableEntityWith headers body = respondWith (Proxy :: Proxy "unprocessableEntity") headers body
 
+locked :: forall body r1. body -> Variant (locked :: Response () body | r1)
 locked = respondNoHeaders @"locked"
 
-lockedWith = respondWith (Proxy :: Proxy "locked")
+lockedWith :: forall headers body r1. Record headers -> body -> Variant (locked :: Response headers body | r1)
+lockedWith headers body = respondWith (Proxy :: Proxy "locked") headers body
 
+failedDependency :: forall body r1. body -> Variant (failedDependency :: Response () body | r1)
 failedDependency = respondNoHeaders @"failedDependency"
 
-failedDependencyWith = respondWith (Proxy :: Proxy "failedDependency")
+failedDependencyWith :: forall headers body r1. Record headers -> body -> Variant (failedDependency :: Response headers body | r1)
+failedDependencyWith headers body = respondWith (Proxy :: Proxy "failedDependency") headers body
 
+tooEarly :: forall body r1. body -> Variant (tooEarly :: Response () body | r1)
 tooEarly = respondNoHeaders @"tooEarly"
 
-tooEarlyWith = respondWith (Proxy :: Proxy "tooEarly")
+tooEarlyWith :: forall headers body r1. Record headers -> body -> Variant (tooEarly :: Response headers body | r1)
+tooEarlyWith headers body = respondWith (Proxy :: Proxy "tooEarly") headers body
 
+upgradeRequired :: forall body r1. body -> Variant (upgradeRequired :: Response () body | r1)
 upgradeRequired = respondNoHeaders @"upgradeRequired"
 
-upgradeRequiredWith = respondWith (Proxy :: Proxy "upgradeRequired")
+upgradeRequiredWith :: forall headers body r1. Record headers -> body -> Variant (upgradeRequired :: Response headers body | r1)
+upgradeRequiredWith headers body = respondWith (Proxy :: Proxy "upgradeRequired") headers body
 
+preconditionRequired :: forall body r1. body -> Variant (preconditionRequired :: Response () body | r1)
 preconditionRequired = respondNoHeaders @"preconditionRequired"
 
-preconditionRequiredWith = respondWith (Proxy :: Proxy "preconditionRequired")
+preconditionRequiredWith :: forall headers body r1. Record headers -> body -> Variant (preconditionRequired :: Response headers body | r1)
+preconditionRequiredWith headers body = respondWith (Proxy :: Proxy "preconditionRequired") headers body
 
+tooManyRequests :: forall body r1. body -> Variant (tooManyRequests :: Response () body | r1)
 tooManyRequests = respondNoHeaders @"tooManyRequests"
 
-tooManyRequestsWith = respondWith (Proxy :: Proxy "tooManyRequests")
+tooManyRequestsWith :: forall headers body r1. Record headers -> body -> Variant (tooManyRequests :: Response headers body | r1)
+tooManyRequestsWith headers body = respondWith (Proxy :: Proxy "tooManyRequests") headers body
 
+requestHeaderFieldsTooLarge :: forall body r1. body -> Variant (requestHeaderFieldsTooLarge :: Response () body | r1)
 requestHeaderFieldsTooLarge = respondNoHeaders @"requestHeaderFieldsTooLarge"
 
-requestHeaderFieldsTooLargeWith = respondWith (Proxy :: Proxy "requestHeaderFieldsTooLarge")
+requestHeaderFieldsTooLargeWith :: forall headers body r1. Record headers -> body -> Variant (requestHeaderFieldsTooLarge :: Response headers body | r1)
+requestHeaderFieldsTooLargeWith headers body = respondWith (Proxy :: Proxy "requestHeaderFieldsTooLarge") headers body
 
+unavailableForLegalReasons :: forall body r1. body -> Variant (unavailableForLegalReasons :: Response () body | r1)
 unavailableForLegalReasons = respondNoHeaders @"unavailableForLegalReasons"
 
-unavailableForLegalReasonsWith = respondWith (Proxy :: Proxy "unavailableForLegalReasons")
+unavailableForLegalReasonsWith :: forall headers body r1. Record headers -> body -> Variant (unavailableForLegalReasons :: Response headers body | r1)
+unavailableForLegalReasonsWith headers body = respondWith (Proxy :: Proxy "unavailableForLegalReasons") headers body
 
+internalServerError :: forall body r1. body -> Variant (internalServerError :: Response () body | r1)
 internalServerError = respondNoHeaders @"internalServerError"
 
-internalServerErrorWith = respondWith (Proxy :: Proxy "internalServerError")
+internalServerErrorWith :: forall headers body r1. Record headers -> body -> Variant (internalServerError :: Response headers body | r1)
+internalServerErrorWith headers body = respondWith (Proxy :: Proxy "internalServerError") headers body
 
+notImplemented :: forall body r1. body -> Variant (notImplemented :: Response () body | r1)
 notImplemented = respondNoHeaders @"notImplemented"
 
-notImplementedWith = respondWith (Proxy :: Proxy "notImplemented")
+notImplementedWith :: forall headers body r1. Record headers -> body -> Variant (notImplemented :: Response headers body | r1)
+notImplementedWith headers body = respondWith (Proxy :: Proxy "notImplemented") headers body
 
+badGateway :: forall body r1. body -> Variant (badGateway :: Response () body | r1)
 badGateway = respondNoHeaders @"badGateway"
 
-badGatewayWith = respondWith (Proxy :: Proxy "badGateway")
+badGatewayWith :: forall headers body r1. Record headers -> body -> Variant (badGateway :: Response headers body | r1)
+badGatewayWith headers body = respondWith (Proxy :: Proxy "badGateway") headers body
 
+serviceUnavailable :: forall body r1. body -> Variant (serviceUnavailable :: Response () body | r1)
 serviceUnavailable = respondNoHeaders @"serviceUnavailable"
 
-serviceUnavailableWith = respondWith (Proxy :: Proxy "serviceUnavailable")
+serviceUnavailableWith :: forall headers body r1. Record headers -> body -> Variant (serviceUnavailable :: Response headers body | r1)
+serviceUnavailableWith headers body = respondWith (Proxy :: Proxy "serviceUnavailable") headers body
 
+gatewayTimeout :: forall body r1. body -> Variant (gatewayTimeout :: Response () body | r1)
 gatewayTimeout = respondNoHeaders @"gatewayTimeout"
 
-gatewayTimeoutWith = respondWith (Proxy :: Proxy "gatewayTimeout")
+gatewayTimeoutWith :: forall headers body r1. Record headers -> body -> Variant (gatewayTimeout :: Response headers body | r1)
+gatewayTimeoutWith headers body = respondWith (Proxy :: Proxy "gatewayTimeout") headers body
 
+httpVersionNotSupported :: forall body r1. body -> Variant (httpVersionNotSupported :: Response () body | r1)
 httpVersionNotSupported = respondNoHeaders @"httpVersionNotSupported"
 
-httpVersionNotSupportedWith = respondWith (Proxy :: Proxy "httpVersionNotSupported")
+httpVersionNotSupportedWith :: forall headers body r1. Record headers -> body -> Variant (httpVersionNotSupported :: Response headers body | r1)
+httpVersionNotSupportedWith headers body = respondWith (Proxy :: Proxy "httpVersionNotSupported") headers body
 
+variantAlsoNegotiates :: forall body r1. body -> Variant (variantAlsoNegotiates :: Response () body | r1)
 variantAlsoNegotiates = respondNoHeaders @"variantAlsoNegotiates"
 
-variantAlsoNegotiatesWith = respondWith (Proxy :: Proxy "variantAlsoNegotiates")
+variantAlsoNegotiatesWith :: forall headers body r1. Record headers -> body -> Variant (variantAlsoNegotiates :: Response headers body | r1)
+variantAlsoNegotiatesWith headers body = respondWith (Proxy :: Proxy "variantAlsoNegotiates") headers body
 
+insufficientStorage :: forall body r1. body -> Variant (insufficientStorage :: Response () body | r1)
 insufficientStorage = respondNoHeaders @"insufficientStorage"
 
-insufficientStorageWith = respondWith (Proxy :: Proxy "insufficientStorage")
+insufficientStorageWith :: forall headers body r1. Record headers -> body -> Variant (insufficientStorage :: Response headers body | r1)
+insufficientStorageWith headers body = respondWith (Proxy :: Proxy "insufficientStorage") headers body
 
+loopDetected :: forall body r1. body -> Variant (loopDetected :: Response () body | r1)
 loopDetected = respondNoHeaders @"loopDetected"
 
-loopDetectedWith = respondWith (Proxy :: Proxy "loopDetected")
+loopDetectedWith :: forall headers body r1. Record headers -> body -> Variant (loopDetected :: Response headers body | r1)
+loopDetectedWith headers body = respondWith (Proxy :: Proxy "loopDetected") headers body
 
+notExtended :: forall body r1. body -> Variant (notExtended :: Response () body | r1)
 notExtended = respondNoHeaders @"notExtended"
 
-notExtendedWith = respondWith (Proxy :: Proxy "notExtended")
+notExtendedWith :: forall headers body r1. Record headers -> body -> Variant (notExtended :: Response headers body | r1)
+notExtendedWith headers body = respondWith (Proxy :: Proxy "notExtended") headers body
 
+networkAuthenticationRequired :: forall body r1. body -> Variant (networkAuthenticationRequired :: Response () body | r1)
 networkAuthenticationRequired = respondNoHeaders @"networkAuthenticationRequired"
 
-networkAuthenticationRequiredWith = respondWith (Proxy :: Proxy "networkAuthenticationRequired")
+networkAuthenticationRequiredWith :: forall headers body r1. Record headers -> body -> Variant (networkAuthenticationRequired :: Response headers body | r1)
+networkAuthenticationRequiredWith headers body = respondWith (Proxy :: Proxy "networkAuthenticationRequired") headers body

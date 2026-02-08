@@ -75,20 +75,20 @@ testOperationIds = describe "API Record - OperationId" do
 testBuildOpenAPISpec :: Effect ViTest
 testBuildOpenAPISpec = describe "API Record - buildOpenAPISpec" do
   _ <- test "generates valid OpenAPI spec with operationIds" do
-    let spec = buildOpenAPISpec @TestAPI { title: "Test API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+    let spec = buildOpenAPISpec @TestAPI { title: "Test API", version: "1.0.0" }
     let json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "\"operationId\":\"getUser\"") json)
     expectToBe true (String.contains (String.Pattern "\"operationId\":\"listUsers\"") json)
     expectToBe true (String.contains (String.Pattern "\"operationId\":\"createUser\"") json)
 
   _ <- test "contains paths" do
-    let spec = buildOpenAPISpec @TestAPI { title: "Test API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+    let spec = buildOpenAPISpec @TestAPI { title: "Test API", version: "1.0.0" }
     let json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "/users/{id}") json)
     expectToBe true (String.contains (String.Pattern "/users") json)
 
   test "contains API info" do
-    let spec = buildOpenAPISpec @TestAPI { title: "Test API", version: "1.0.0", description: Nothing, contact: Nothing, license: Nothing }
+    let spec = buildOpenAPISpec @TestAPI { title: "Test API", version: "1.0.0" }
     let json = writeJSON spec
     expectToBe true (String.contains (String.Pattern "Test API") json)
     expectToBe true (String.contains (String.Pattern "1.0.0") json)

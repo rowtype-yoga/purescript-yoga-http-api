@@ -6,7 +6,6 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
-import Yoga.HTTP.API.Path (Path, Lit)
 import Yoga.HTTP.API.Route (GET, Route, Request, buildOpenAPISpec)
 import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, DigestAuth)
 import Yoga.JSON (writeJSON)
@@ -19,25 +18,25 @@ import ViTest.Expect (expectToBe)
 --------------------------------------------------------------------------------
 
 type BearerAuthAPI =
-  { getProtected :: Route GET (Path (Lit "protected")) (Request { headers :: { authorization :: BearerToken } }) (ok :: { body :: { message :: String } })
+  { getProtected :: Route GET "protected" (Request { headers :: { authorization :: BearerToken } }) (ok :: { body :: { message :: String } })
   }
 
 type BasicAuthAPI =
-  { getProtected :: Route GET (Path (Lit "protected")) (Request { headers :: { authorization :: BasicAuth } }) (ok :: { body :: { message :: String } })
+  { getProtected :: Route GET "protected" (Request { headers :: { authorization :: BasicAuth } }) (ok :: { body :: { message :: String } })
   }
 
 type ApiKeyAPI =
-  { getProtected :: Route GET (Path (Lit "protected")) (Request { headers :: { apiKey :: ApiKeyHeader } }) (ok :: { body :: { message :: String } })
+  { getProtected :: Route GET "protected" (Request { headers :: { apiKey :: ApiKeyHeader } }) (ok :: { body :: { message :: String } })
   }
 
 type DigestAuthAPI =
-  { getProtected :: Route GET (Path (Lit "protected")) (Request { headers :: { authorization :: DigestAuth } }) (ok :: { body :: { message :: String } })
+  { getProtected :: Route GET "protected" (Request { headers :: { authorization :: DigestAuth } }) (ok :: { body :: { message :: String } })
   }
 
 type MultiAuthAPI =
-  { bearerEndpoint :: Route GET (Path (Lit "bearer")) (Request { headers :: { authorization :: BearerToken } }) (ok :: { body :: { message :: String } })
-  , basicEndpoint :: Route GET (Path (Lit "basic")) (Request { headers :: { authorization :: BasicAuth } }) (ok :: { body :: { message :: String } })
-  , apiKeyEndpoint :: Route GET (Path (Lit "apikey")) (Request { headers :: { xApiKey :: ApiKeyHeader } }) (ok :: { body :: { message :: String } })
+  { bearerEndpoint :: Route GET "bearer" (Request { headers :: { authorization :: BearerToken } }) (ok :: { body :: { message :: String } })
+  , basicEndpoint :: Route GET "basic" (Request { headers :: { authorization :: BasicAuth } }) (ok :: { body :: { message :: String } })
+  , apiKeyEndpoint :: Route GET "apikey" (Request { headers :: { xApiKey :: ApiKeyHeader } }) (ok :: { body :: { message :: String } })
   }
 
 --------------------------------------------------------------------------------

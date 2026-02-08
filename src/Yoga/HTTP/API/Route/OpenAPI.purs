@@ -104,7 +104,8 @@ import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimu
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.HTTP.API.Route.Response (class ToResponse)
 import Yoga.HTTP.API.Route.StatusCode (class StatusCodeMap, statusCodeFor, statusCodeToString)
-import Yoga.JSON (class WriteForeign, writeImpl)
+import Yoga.JSON (class WriteForeign, writeImpl, unsafeStringify)
+import Yoga.JSON as Yoga.JSON
 
 --------------------------------------------------------------------------------
 -- Helper Functions for Building OpenAPI Objects
@@ -2010,7 +2011,18 @@ groupByPath = foldl insertOp FObject.empty
     in
       FObject.insert pathKey methodMap' acc
 
--- FFI helpers
-foreign import unsafeParseJSON :: String -> Foreign
-foreign import stripKeys :: Array String -> Foreign -> Foreign
-foreign import setOperationId :: String -> String -> String
+unsafeParseJSON :: String -> Foreign
+unsafeParseJSON str = case Yoga.JSON.readJSON_ str of
+  Just (obj :: FObject.Object Foreign) -> unsafeCoerce obj
+  Nothing -> unsafeCoerce str
+
+stripKeys :: Array String -> Foreign -> Foreign
+stripKeys keys obj = do
+  let fobj = (unsafeCoerce :: Foreign -> FObject.Object Foreign) obj
+  unsafeCoerce $ foldl (flip FObject.delete) fobj keys
+
+setOperationId :: String -> String -> String
+setOperationId name jsonStr = case Yoga.JSON.readJSON_ jsonStr of
+  Nothing -> jsonStr
+  Just (obj :: FObject.Object Foreign) ->
+    Yoga.JSON.unsafeStringify $ FObject.insert "operationId" (unsafeCoerce name) obj

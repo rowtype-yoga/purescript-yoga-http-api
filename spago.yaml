@@ -1,6 +1,13 @@
 workspace:
   packageSet:
     registry: 63.2.1
+  extraPackages:
+    yoga-options:
+      path: ../purescript-yoga-options
+    vitest:
+      path: ../purescript-vitest
+    compile-fail:
+      path: ../purescript-compile-fail
 
 package:
   name: yoga-http-api
@@ -29,12 +36,15 @@ package:
     - undefined-is-not-a-problem: ">=1.1.0 <2.0.0"
     - unsafe-coerce: ">=6.0.0 <7.0.0"
     - untagged-union: ">=1.0.0 <2.0.0"
+    - yoga-options: ">=0.1.0 <1.0.0"
     - variant: ">=8.0.0 <9.0.0"
     - yoga-json: ">=5.2.0 <6.0.0"
   test:
     main: Test.Operators
     dependencies:
-      - vitest: ">=1.0.0 <2.0.0"
+      - vitest: ">=2.0.0 <3.0.0"
+      - compile-fail: ">=0.2.0 <1.0.0"
+      - node-fs: ">=9.0.0 <10.0.0"
       - console: ">=6.0.0 <7.0.0"
       - foreign-object: ">=4.0.0 <5.0.0"
       - arrays: ">=7.0.0 <8.0.0"

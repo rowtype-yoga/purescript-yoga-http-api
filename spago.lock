@@ -64,6 +64,9 @@
             },
             {
               "yoga-json": ">=5.2.0 <6.0.0"
+            },
+            {
+              "yoga-options": ">=0.1.0 <1.0.0"
             }
           ]
         },
@@ -71,6 +74,9 @@
           "dependencies": [
             {
               "arrays": ">=7.0.0 <8.0.0"
+            },
+            {
+              "compile-fail": ">=0.2.0 <1.0.0"
             },
             {
               "console": ">=6.0.0 <7.0.0"
@@ -85,13 +91,16 @@
               "integers": ">=6.0.0 <7.0.0"
             },
             {
+              "node-fs": ">=9.0.0 <10.0.0"
+            },
+            {
               "refs": ">=6.0.0 <7.0.0"
             },
             {
               "strings": ">=6.0.0 <7.0.0"
             },
             {
-              "vitest": ">=1.0.0 <2.0.0"
+              "vitest": ">=2.0.0 <3.0.0"
             },
             {
               "yoga-om": ">=1.2.2 <2.0.0"
@@ -627,7 +636,17 @@
         "zipperarray": "2.0.0"
       }
     },
-    "extra_packages": {}
+    "extra_packages": {
+      "compile-fail": {
+        "path": "../purescript-compile-fail"
+      },
+      "vitest": {
+        "path": "../purescript-vitest"
+      },
+      "yoga-options": {
+        "path": "../purescript-yoga-options"
+      }
+    }
   },
   "packages": {
     "aff": {
@@ -650,6 +669,12 @@
         "transformers",
         "unsafe-coerce"
       ]
+    },
+    "arraybuffer-types": {
+      "type": "registry",
+      "version": "3.0.2",
+      "integrity": "sha256-p05cJnSkyeoB7VHzMyc2Eb1RwUaB7Nl0sQSqEGNEUD8=",
+      "dependencies": []
     },
     "arrays": {
       "type": "registry",
@@ -710,6 +735,21 @@
         "prelude",
         "tuples",
         "unfoldable"
+      ]
+    },
+    "compile-fail": {
+      "type": "local",
+      "path": "../purescript-compile-fail",
+      "dependencies": [
+        "aff",
+        "arrays",
+        "maybe",
+        "node-buffer",
+        "node-child-process",
+        "node-execa",
+        "node-fs",
+        "prelude",
+        "strings"
       ]
     },
     "console": {
@@ -1062,6 +1102,15 @@
         "transformers"
       ]
     },
+    "js-timers": {
+      "type": "registry",
+      "version": "6.1.0",
+      "integrity": "sha256-mYEL4zjFOzrDeVCnR9Hg3pcZaBZilB6zPGaZ4fzRmzg=",
+      "dependencies": [
+        "effect",
+        "prelude"
+      ]
+    },
     "lazy": {
       "type": "registry",
       "version": "6.0.0",
@@ -1133,6 +1182,218 @@
       "dependencies": [
         "prelude",
         "safe-coerce"
+      ]
+    },
+    "node-buffer": {
+      "type": "registry",
+      "version": "9.0.0",
+      "integrity": "sha256-RdQjilmEHqsT4fwpCr8Mavw8KTafYrS3ZM6zeAAVAl8=",
+      "dependencies": [
+        "arraybuffer-types",
+        "effect",
+        "functions",
+        "maybe",
+        "nullable",
+        "partial",
+        "prelude",
+        "st",
+        "unsafe-coerce"
+      ]
+    },
+    "node-child-process": {
+      "type": "registry",
+      "version": "11.1.0",
+      "integrity": "sha256-Um7g75gXKEX51ZlviJWocTjUENUW1qHgqGqhYKkka74=",
+      "dependencies": [
+        "aff",
+        "datetime",
+        "effect",
+        "either",
+        "exceptions",
+        "foreign",
+        "foreign-object",
+        "functions",
+        "maybe",
+        "node-buffer",
+        "node-event-emitter",
+        "node-fs",
+        "node-os",
+        "node-streams",
+        "nullable",
+        "parallel",
+        "partial",
+        "posix-types",
+        "prelude",
+        "refs",
+        "safe-coerce",
+        "unsafe-coerce"
+      ]
+    },
+    "node-event-emitter": {
+      "type": "registry",
+      "version": "3.0.0",
+      "integrity": "sha256-wodx71NxJBPXOaawFn01V1ByYB2vT+I3RuV2giOVKMg=",
+      "dependencies": [
+        "effect",
+        "either",
+        "functions",
+        "maybe",
+        "nullable",
+        "prelude",
+        "unsafe-coerce"
+      ]
+    },
+    "node-execa": {
+      "type": "registry",
+      "version": "5.0.0",
+      "integrity": "sha256-Br4KV8ZhK3dJYnl8VstEhQuJTFGd1yN2aJ72mCus1sg=",
+      "dependencies": [
+        "aff",
+        "arrays",
+        "control",
+        "effect",
+        "either",
+        "exceptions",
+        "foldable-traversable",
+        "foreign",
+        "foreign-object",
+        "functions",
+        "integers",
+        "js-timers",
+        "maybe",
+        "node-buffer",
+        "node-child-process",
+        "node-event-emitter",
+        "node-fs",
+        "node-human-signals",
+        "node-os",
+        "node-path",
+        "node-process",
+        "node-streams",
+        "nullable",
+        "numbers",
+        "ordered-collections",
+        "parallel",
+        "parsing",
+        "partial",
+        "posix-types",
+        "prelude",
+        "record",
+        "refs",
+        "safe-coerce",
+        "strings",
+        "tailrec",
+        "tuples",
+        "unsafe-coerce",
+        "unsafe-reference"
+      ]
+    },
+    "node-fs": {
+      "type": "registry",
+      "version": "9.2.0",
+      "integrity": "sha256-fxioTSm9y47WuYs9F/7nxCh/RVDCl3Kr3Hg779J4SJA=",
+      "dependencies": [
+        "aff",
+        "datetime",
+        "effect",
+        "either",
+        "enums",
+        "exceptions",
+        "functions",
+        "integers",
+        "js-date",
+        "maybe",
+        "node-buffer",
+        "node-path",
+        "node-streams",
+        "nullable",
+        "partial",
+        "prelude",
+        "strings"
+      ]
+    },
+    "node-human-signals": {
+      "type": "registry",
+      "version": "1.0.0",
+      "integrity": "sha256-3Uet4N3iU8qXqVD5isYv54tS+v5fqd5zbhJ7ntQLjR4=",
+      "dependencies": [
+        "arrays",
+        "control",
+        "foreign-object",
+        "maybe",
+        "ordered-collections",
+        "prelude"
+      ]
+    },
+    "node-os": {
+      "type": "registry",
+      "version": "5.1.0",
+      "integrity": "sha256-UtQiPiZy5ouV832ubww/U8KlpVYny9xsW8WWfYOEgtA=",
+      "dependencies": [
+        "arrays",
+        "bifunctors",
+        "control",
+        "datetime",
+        "effect",
+        "either",
+        "exceptions",
+        "foreign",
+        "foreign-object",
+        "functions",
+        "maybe",
+        "node-buffer",
+        "nullable",
+        "partial",
+        "posix-types",
+        "prelude",
+        "unsafe-coerce"
+      ]
+    },
+    "node-path": {
+      "type": "registry",
+      "version": "5.0.1",
+      "integrity": "sha256-j7n/SmpVz0FOMJl4XZop3ofJ+MeIPkMNqUEUKHEL6Us=",
+      "dependencies": [
+        "effect"
+      ]
+    },
+    "node-process": {
+      "type": "registry",
+      "version": "11.2.0",
+      "integrity": "sha256-onzKeNmaeYfN3HSDPqSFTrrP2Yl9tnVsfKKhnf2plxM=",
+      "dependencies": [
+        "effect",
+        "exceptions",
+        "foreign",
+        "foreign-object",
+        "maybe",
+        "node-event-emitter",
+        "node-streams",
+        "nullable",
+        "posix-types",
+        "prelude",
+        "strings"
+      ]
+    },
+    "node-streams": {
+      "type": "registry",
+      "version": "9.0.1",
+      "integrity": "sha256-yuVGm/R/tBr4Nphi+a1a984Z0fkmN9Q5wWtSmbmJTpA=",
+      "dependencies": [
+        "aff",
+        "arrays",
+        "effect",
+        "either",
+        "exceptions",
+        "maybe",
+        "node-buffer",
+        "node-event-emitter",
+        "nullable",
+        "prelude",
+        "refs",
+        "st",
+        "tailrec",
+        "unsafe-coerce"
       ]
     },
     "nonempty": {
@@ -1216,11 +1477,53 @@
         "transformers"
       ]
     },
+    "parsing": {
+      "type": "registry",
+      "version": "10.2.0",
+      "integrity": "sha256-cwEGJ8HgyhRPdVwLLD4rsqdZMDjGwAdnT7b13xqkKEQ=",
+      "dependencies": [
+        "arrays",
+        "control",
+        "effect",
+        "either",
+        "enums",
+        "foldable-traversable",
+        "functions",
+        "identity",
+        "integers",
+        "lazy",
+        "lists",
+        "maybe",
+        "newtype",
+        "nullable",
+        "numbers",
+        "partial",
+        "prelude",
+        "st",
+        "strings",
+        "tailrec",
+        "transformers",
+        "tuples",
+        "unfoldable",
+        "unicode",
+        "unsafe-coerce"
+      ]
+    },
     "partial": {
       "type": "registry",
       "version": "4.0.0",
       "integrity": "sha256-mdrlJBAgFMh79hNRW39uv7c+BwnnaOrAMmdh7+VhEhs=",
       "dependencies": []
+    },
+    "posix-types": {
+      "type": "registry",
+      "version": "6.0.0",
+      "integrity": "sha256-Je5jG439F/SFO/IvVevZnWVxDIonrehlKuJkefP2lHE=",
+      "dependencies": [
+        "maybe",
+        "newtype",
+        "prelude"
+      ]
     },
     "prelude": {
       "type": "registry",
@@ -1425,11 +1728,34 @@
         "tuples"
       ]
     },
+    "unicode": {
+      "type": "registry",
+      "version": "6.0.0",
+      "integrity": "sha256-5KugCNyYxscmZpnMbssOQA96XimuBN/bjHpdrtd5qaY=",
+      "dependencies": [
+        "arrays",
+        "enums",
+        "integers",
+        "maybe",
+        "partial",
+        "prelude",
+        "strings",
+        "unsafe-coerce"
+      ]
+    },
     "unsafe-coerce": {
       "type": "registry",
       "version": "6.0.0",
       "integrity": "sha256-0L1QsaY20OILjfU5TV72d3U/tSjhmL9hJ32WMp857Lk=",
       "dependencies": []
+    },
+    "unsafe-reference": {
+      "type": "registry",
+      "version": "5.0.0",
+      "integrity": "sha256-ttSJTQUnK8AK2eGOsfRxLUJEDPL6pnmExjbiOqfwC6I=",
+      "dependencies": [
+        "prelude"
+      ]
     },
     "untagged-union": {
       "type": "registry",
@@ -1464,12 +1790,12 @@
       ]
     },
     "vitest": {
-      "type": "registry",
-      "version": "1.0.0",
-      "integrity": "sha256-grMOE1y+Ld5u8NZQ5OL32Rk+MzYt0DQI3Wi4L8b9hm8=",
+      "type": "local",
+      "path": "../purescript-vitest",
       "dependencies": [
         "aff",
         "effect",
+        "either",
         "exceptions",
         "js-promise",
         "js-promise-aff",
@@ -1636,6 +1962,16 @@
         "uncurried-transformers",
         "unsafe-coerce",
         "variant"
+      ]
+    },
+    "yoga-options": {
+      "type": "local",
+      "path": "../purescript-yoga-options",
+      "dependencies": [
+        "identity",
+        "literals",
+        "unsafe-coerce",
+        "untagged-union"
       ]
     },
     "yoga-tree": {

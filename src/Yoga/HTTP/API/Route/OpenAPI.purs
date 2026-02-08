@@ -84,7 +84,7 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.String as String
 import Data.Identity (Identity)
 import Data.Undefined.NoProblem (Opt, toMaybe, undefined)
-import Yoga.HTTP.API.UnionTrick (UndefinedOr, uorToMaybe, class CoerceFields, coerceFields)
+import Yoga.Options (class Options, options, uorToMaybe, UndefinedOr)
 import Data.String.Regex (replace)
 import Data.String.Regex.Flags (global)
 import Data.String.Regex.Unsafe (unsafeRegex)
@@ -1929,33 +1929,15 @@ type OpenAPIInfo = { | OpenAPIInfoR Identity }
 -- | OpenAPI info with optional fields (using UndefinedOr)
 type OpenAPIInfoUor = { | OpenAPIInfoR UndefinedOr }
 
--- | Build a complete OpenAPI 3.0 spec from a type-level collection of routes.
--- |
--- | Examples:
--- |   -- Basic usage (omit all optional fields):
--- |   buildOpenAPISpec @MyAPI
--- |     { title: "My API", version: "1.0.0" }
--- |
--- |   -- With optional fields:
--- |   buildOpenAPISpec @MyAPI
--- |     { title: "My API"
--- |     , version: "1.0.0"
--- |     , description: "A comprehensive API"
--- |     , contact: { name: "Support", email: "api@example.com" }
--- |     }
--- |
--- | Note: Uses the CoerceFields typeclass for type-safe coercion of optional fields.
--- | For nested records (contact/license), use `undefined` from Literals.Undefined for optional fields.
--- | The typeclass verifies at compile-time that each field can be safely coerced.
 buildOpenAPISpec
   :: forall @routes r
    . CollectOperations routes
   => CollectRouteSchemas routes
   => ValidateSchemaNames routes
-  => CoerceFields r (OpenAPIInfoR UndefinedOr)
+  => Options r (OpenAPIInfoR UndefinedOr)
   => { | r }
   -> OpenAPISpec
-buildOpenAPISpec given = buildOpenAPISpec' @routes (coerceFields given) { servers: undefined }
+buildOpenAPISpec given = buildOpenAPISpec' @routes (options @(OpenAPIInfoR UndefinedOr) given) { servers: undefined }
 
 -- | Build a complete OpenAPI 3.0 spec with optional servers configuration.
 buildOpenAPISpec'

@@ -15,6 +15,7 @@ import Test.OpenAPIInfoTest as OpenAPIInfoTest
 import Test.ContentTypeTest as ContentTypeTest
 import Test.ExamplesTest as ExamplesTest
 import Test.ComprehensiveExample as ComprehensiveExample
+import CompileFailTest.Spec as CompileFailTest
 
 spec :: Effect ViTest
 spec = do
@@ -67,7 +68,8 @@ spec = do
   _ <- ExamplesTest.testExamplesInQueryParams
   _ <- ExamplesTest.testComplexExampleObject
   _ <- ComprehensiveExample.testComprehensiveExample
-  SchemaComponentTest.testSchemaComponents
+  _ <- SchemaComponentTest.testSchemaComponents
+  CompileFailTest.testCompileFail
 
 main :: ViTest
 main = viTest spec

@@ -3,7 +3,7 @@ module Yoga.HTTP.API.Route.RenderMethod
   , renderMethod
   ) where
 
-import Type.Proxy (Proxy(..))
+import Type.Proxy (Proxy)
 import Yoga.HTTP.API.Route.Method (DELETE, GET, PATCH, POST, PUT)
 
 --------------------------------------------------------------------------------

@@ -7,6 +7,7 @@ import OperatorTest.Spec as OperatorTest
 import ParserTest.Spec as ParserTest
 import VariantResponseTest.Spec as VariantResponseTest
 import MetadataValidationTest.Spec as MetadataValidationTest
+import CompileFailTest.Spec as CompileFailTest
 
 spec :: Effect ViTest
 spec = do
@@ -31,7 +32,8 @@ spec = do
   _ <- MetadataValidationTest.testMaxLengthValidation
   _ <- MetadataValidationTest.testMinimumValidation
   _ <- MetadataValidationTest.testMaximumValidation
-  MetadataValidationTest.testComposedValidation
+  _ <- MetadataValidationTest.testComposedValidation
+  CompileFailTest.testCompileFail
 
 main :: ViTest
 main = viTest spec

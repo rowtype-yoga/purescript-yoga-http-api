@@ -54,21 +54,20 @@ import Data.String.Regex.Flags (global)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
-import Data.Tuple.Nested (type (/\), (/\))
 import Foreign (Foreign)
 import Foreign.Object as FObject
+import Literals.Undefined (Undefined)
 import Prim.Row as Row
 import Prim.RowList (class RowToList, RowList, Cons, Nil)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
-import Literals.Undefined (Undefined)
-import Untagged.Union (OneOf)
+import Untagged.Union (OneOf, uorToMaybe)
 import Unsafe.Coerce (unsafeCoerce)
-import Yoga.HTTP.API.UnionTrick (uorToMaybe, class Options, options)
 import Yoga.HTTP.API.Route.BearerToken (BearerToken)
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, NoBody)
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
-import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasOperationMetadata, operationMetadata)
+import Yoga.HTTP.API.Route.OpenAPIMetadata (class HasDefault, class HasDeprecated, class HasDescription, class HasEnum, class HasExample, class HasFormat, class HasMaxLength, class HasMaximum, class HasMinLength, class HasMinimum, class HasNullable, class HasPattern, class HasTitle, Deprecated, Description, Enum, Example, Format, Nullable, default, deprecated, description, enum, example, format, maxLength, maximum, minLength, minimum, nullable, pattern, title)
+import Yoga.Options (class Options, options)
 import Yoga.HTTP.API.Route.Response (class ToResponse)
 import Yoga.HTTP.API.Route.StatusCode (class StatusCodeMap, statusCodeFor, statusCodeToString)
 import Yoga.JSON (class WriteForeign, writeImpl)
@@ -406,6 +405,7 @@ instance
 --------------------------------------------------------------------------------
 
 -- | Render a PureScript type as an OpenAPI JSON schema
+class RenderJSONSchema :: Type -> Constraint
 class RenderJSONSchema ty where
   renderJSONSchema :: Proxy ty -> Foreign
 
@@ -949,6 +949,8 @@ type OpenAPIInfoR f =
   , license :: f { | LicenseInfoR }
   )
 
+type OpenAPIInfo = OpenAPIInfoR (OneOf Undefined)
+
 -- | Build a complete OpenAPI 3.0 spec from a type-level collection of routes.
 -- |
 -- | Examples:
@@ -965,16 +967,16 @@ type OpenAPIInfoR f =
 buildOpenAPISpec
   :: forall @routes r
    . CollectOperations routes
-  => Options r (OpenAPIInfoR (OneOf Undefined))
+  => Options r OpenAPIInfo
   => { | r }
   -> OpenAPISpec
-buildOpenAPISpec given = buildOpenAPISpec' @routes (options @(OpenAPIInfoR (OneOf Undefined)) given) { servers: Nothing }
+buildOpenAPISpec given = buildOpenAPISpec' @routes (options @OpenAPIInfo given) { servers: Nothing }
 
 -- | Build a complete OpenAPI 3.0 spec with optional servers configuration.
 buildOpenAPISpec'
   :: forall @routes
    . CollectOperations routes
-  => { | OpenAPIInfoR (OneOf Undefined) }
+  => { | OpenAPIInfo }
   -> { servers :: Maybe (Array ServerObject) }
   -> OpenAPISpec
 buildOpenAPISpec' info config =

@@ -1,11 +1,18 @@
 workspace:
   packageSet:
     registry: 63.2.1
+  extraPackages:
+    yoga-options:
+      path: ../purescript-yoga-options
+    vitest:
+      path: ../purescript-vitest
+    compile-fail:
+      path: ../purescript-compile-fail
 
 package:
   name: yoga-http-api
   publish:
-    version: 0.1.0
+    version: 0.1.1
     license: MIT
     location:
       githubOwner: rowtype-yoga
@@ -30,10 +37,12 @@ package:
     - untagged-union: ">=1.0.0 <2.0.0"
     - variant: ">=8.0.0 <9.0.0"
     - yoga-json: ">=5.1.0 <6.0.0"
+    - yoga-options: ">=0.1.0 <1.0.0"
   test:
     main: Test.Operators
     dependencies:
-      - vitest: ">=1.0.0 <2.0.0"
+      - vitest: ">=2.0.0 <3.0.0"
+      - compile-fail: ">=0.1.0 <1.0.0"
       - console: ">=6.0.0 <7.0.0"
       - foreign-object: ">=4.0.0 <5.0.0"
       - arrays: ">=7.0.0 <8.0.0"

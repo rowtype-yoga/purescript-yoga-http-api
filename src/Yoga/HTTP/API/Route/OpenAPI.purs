@@ -61,7 +61,10 @@ import Prim.Row as Row
 import Prim.RowList (class RowToList, RowList, Cons, Nil)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
+import Literals.Undefined (Undefined)
+import Untagged.Union (OneOf)
 import Unsafe.Coerce (unsafeCoerce)
+import Yoga.HTTP.API.UnionTrick (uorToMaybe, class Options, options)
 import Yoga.HTTP.API.Route.BearerToken (BearerToken)
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, NoBody)
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
@@ -927,56 +930,84 @@ type ServerObject =
   , description :: Maybe String
   }
 
+type ContactInfoR =
+  ( name :: String
+  , url :: String
+  , email :: String
+  )
+
+type LicenseInfoR =
+  ( name :: String
+  , url :: String
+  )
+
+type OpenAPIInfoR f =
+  ( title :: String
+  , version :: String
+  , description :: f String
+  , contact :: f { | ContactInfoR }
+  , license :: f { | LicenseInfoR }
+  )
+
 -- | Build a complete OpenAPI 3.0 spec from a type-level collection of routes.
 -- |
 -- | Examples:
--- |   -- Basic usage:
--- |   buildOpenAPISpec @(HealthRoute /\ UserRoute)
+-- |   buildOpenAPISpec @MyAPI
 -- |     { title: "My API", version: "1.0.0" }
 -- |
--- |   -- With servers:
--- |   buildOpenAPISpec' @(HealthRoute /\ UserRoute)
+-- |   buildOpenAPISpec @MyAPI
 -- |     { title: "My API"
 -- |     , version: "1.0.0"
--- |     , servers: Just
--- |         [ { url: "https://api.example.com", description: Just "Production server" }
--- |         , { url: "https://staging-api.example.com", description: Just "Staging server" }
--- |         ]
+-- |     , description: "A comprehensive API"
+-- |     , contact: { name: "Support", email: "api@example.com" }
+-- |     , license: { name: "MIT" }
 -- |     }
 buildOpenAPISpec
-  :: forall @routes
+  :: forall @routes r
    . CollectOperations routes
-  => { title :: String, version :: String }
+  => Options r (OpenAPIInfoR (OneOf Undefined))
+  => { | r }
   -> OpenAPISpec
-buildOpenAPISpec info = buildOpenAPISpec' @routes info { servers: Nothing }
+buildOpenAPISpec given = buildOpenAPISpec' @routes (options @(OpenAPIInfoR (OneOf Undefined)) given) { servers: Nothing }
 
 -- | Build a complete OpenAPI 3.0 spec with optional servers configuration.
 buildOpenAPISpec'
   :: forall @routes
    . CollectOperations routes
-  => { title :: String, version :: String }
+  => { | OpenAPIInfoR (OneOf Undefined) }
   -> { servers :: Maybe (Array ServerObject) }
   -> OpenAPISpec
 buildOpenAPISpec' info config =
-  let
-    ops = collectOperations (Proxy :: Proxy routes)
-    paths = groupByPath ops
-    securitySchemes = buildSecuritySchemes ops
-    components =
-      if FObject.isEmpty securitySchemes then Nothing
-      else Just { securitySchemes }
-    baseSpec = FObject.fromFoldable
-      [ Tuple "openapi" (unsafeCoerce "3.0.0")
-      , Tuple "info" (unsafeCoerce { title: info.title, version: info.version })
-      , Tuple "paths" (unsafeCoerce paths)
-      ]
-    withComponents = case components of
-      Nothing -> baseSpec
-      Just c -> FObject.insert "components" (unsafeCoerce c) baseSpec
-    withServers = case config.servers of
-      Nothing -> withComponents
-      Just servers -> FObject.insert "servers" (writeImpl servers) withComponents
-  in
+  do
+    let
+      ops = collectOperations (Proxy :: Proxy routes)
+      paths = groupByPath ops
+      securitySchemes = buildSecuritySchemes ops
+      components =
+        if FObject.isEmpty securitySchemes then Nothing
+        else Just { securitySchemes }
+      infoBase = FObject.fromFoldable
+        [ Tuple "title" (writeImpl info.title)
+        , Tuple "version" (writeImpl info.version)
+        ]
+      infoWithDescription = maybe infoBase (\desc -> FObject.insert "description" (writeImpl desc) infoBase) (uorToMaybe info.description)
+      infoWithContact = maybe infoWithDescription
+        (\contact -> FObject.insert "contact" (writeImpl contact) infoWithDescription)
+        (uorToMaybe info.contact)
+      infoWithLicense = maybe infoWithContact
+        (\license -> FObject.insert "license" (writeImpl license) infoWithContact)
+        (uorToMaybe info.license)
+      baseSpec = FObject.fromFoldable
+        [ Tuple "openapi" (unsafeCoerce "3.0.0")
+        , Tuple "info" (unsafeCoerce infoWithLicense)
+        , Tuple "paths" (unsafeCoerce paths)
+        ]
+      withComponents = case components of
+        Nothing -> baseSpec
+        Just c -> FObject.insert "components" (unsafeCoerce c) baseSpec
+      withServers = case config.servers of
+        Nothing -> withComponents
+        Just servers -> FObject.insert "servers" (writeImpl servers) withComponents
     unsafeCoerce $ withServers
 
 -- | Convert `:param` to `{param}` for OpenAPI path format

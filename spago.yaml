@@ -1,8 +1,13 @@
+workspace:
+  packageSet:
+    registry: 73.0.0
+  extraPackages:
+    yoga-options: "0.1.0"
 
 package:
   name: yoga-http-api
   publish:
-    version: 0.1.1
+    version: 0.1.2
     license: MIT
     location:
       githubOwner: rowtype-yoga
@@ -26,6 +31,7 @@ package:
     - untagged-union: ">=1.0.0 <2.0.0"
     - variant: ">=8.0.0 <9.0.0"
     - yoga-json: ">=5.1.0 <6.0.0"
+    - undefined-is-not-a-problem: ">=1.1.0 <2.0.0"
     - yoga-options: ">=0.1.0 <1.0.0"
   test:
     main: Test.Operators

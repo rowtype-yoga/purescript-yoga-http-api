@@ -1,5 +1,6 @@
 module Yoga.HTTP.API.Route.Handler
   ( HandlerFn
+  , Request(..)
   , NoRequest
   , class DefaultRequestFields
   , class DefaultRequestFieldsRL
@@ -35,6 +36,8 @@ import Yoga.HTTP.API.Route.Encoding (JSON, NoBody)
 -- |   Route GET "health" {} (ok :: { body :: String })
 type NoRequest = Record ()
 
+data Request :: Type -> Type
+data Request r = Request r
 --------------------------------------------------------------------------------
 -- Handler Type
 --------------------------------------------------------------------------------

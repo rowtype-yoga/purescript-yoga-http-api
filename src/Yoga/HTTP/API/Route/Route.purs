@@ -13,8 +13,8 @@ import Prim.RowList (class RowToList, RowList)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (class PathPattern, pathPattern)
-import Yoga.HTTP.API.Route.Handler (class DefaultRequestFields, class SegmentPathParams, class SegmentQueryParams)
-import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderCookieParamsSchema, renderCookieParamsSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class DetectCookieSecurity, detectCookieSecurity, class ToOpenAPI, toOpenAPIImpl, class CollectSchemas, collectSchemas, class CollectVariantSchemasRL, collectVariantSchemasRL, class CollectRouteSchemas, class CollectSchemaNames, class CollectVariantSchemaNames, class CollectRouteSchemaNames)
+import Yoga.HTTP.API.Route.Handler (Request, class DefaultRequestFields, class SegmentPathParams, class SegmentQueryParams)
+import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderCookieParamsSchema, renderCookieParamsSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class DetectCookieSecurity, detectCookieSecurity, class ToOpenAPI, toOpenAPIImpl, class CollectSchemas, collectSchemas, class CollectVariantSchemasRL, collectVariantSchemasRL, class CollectRouteSchemas, collectRouteSchemas, class CollectSchemaNames, class CollectVariantSchemaNames, class CollectRouteSchemaNames)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (class HasOperationMetadata, operationMetadata)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.HTTP.API.Route.Response (Response, class ToResponse)
@@ -100,6 +100,10 @@ instance
     in
       writeJSON operation
 
+else instance
+  ToOpenAPI (Route method segments (Record partialRequest) userResp) =>
+  ToOpenAPI (Route method segments (Request (Record partialRequest)) userResp) where
+  toOpenAPIImpl _ = toOpenAPIImpl (Proxy :: Proxy (Route method segments (Record partialRequest) userResp))
 -- CollectOperations instance for Route
 instance
   ( RenderMethod method
@@ -129,6 +133,10 @@ instance
     in
       FObject.union requestSchemas responseSchemas
 
+else instance
+  CollectRouteSchemas (Route method segments (Record partialRequest) userResp) =>
+  CollectRouteSchemas (Route method segments (Request (Record partialRequest)) userResp) where
+  collectRouteSchemas _ = collectRouteSchemas (Proxy :: Proxy (Route method segments (Record partialRequest) userResp))
 -- CollectRouteSchemaNames instance for Route (compile-time collision detection)
 instance
   ( DefaultRequestFields partialRequest reqHeaders reqCookies encoding
@@ -138,3 +146,7 @@ instance
   , Union reqNames respNames names
   ) =>
   CollectRouteSchemaNames (Route method segments (Record partialRequest) userResp) names
+
+else instance
+  CollectRouteSchemaNames (Route method segments (Record partialRequest) userResp) names =>
+  CollectRouteSchemaNames (Route method segments (Request (Record partialRequest)) userResp) names

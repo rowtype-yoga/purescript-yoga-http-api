@@ -60,7 +60,7 @@ type ComprehensiveAPI =
     healthCheck ::
       Route GET "health"
         NoRequest
-        (ok :: { body :: PlainText String })
+        (ok :: { body :: PlainText })
 
   , -- API Key authentication
     getStats ::

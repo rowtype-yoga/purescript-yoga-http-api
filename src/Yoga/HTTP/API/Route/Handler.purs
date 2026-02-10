@@ -159,6 +159,7 @@ class EncodingBody (encoding :: Type) (body :: Type) | encoding -> body
 
 instance encodingBodyJSON :: EncodingBody (JSON a) a
 instance encodingBodyNoBody :: EncodingBody NoBody Unit
+instance EncodingBody (Record row) (Record row)
 
 --------------------------------------------------------------------------------
 -- RequestHeaders: Extract headers row from a request type

@@ -50,7 +50,7 @@ testRequestContentTypes = describe "Request Content Types" do
 
   _ <- test "PlainText request body generates text/plain" do
     let
-      spec = buildOpenAPISpec @{ echo :: Route POST "echo" { body :: PlainText String } (ok :: { body :: PlainText String }) }
+      spec = buildOpenAPISpec @{ echo :: Route POST "echo" { body :: PlainText } (ok :: { body :: PlainText }) }
         { title: "API"
         , version: "1.0.0"
         }
@@ -88,7 +88,7 @@ testResponseContentTypes = describe "Response Content Types" do
 
   _ <- test "PlainText response body generates text/plain" do
     let
-      spec = buildOpenAPISpec @{ getText :: Route GET "text" {} (ok :: { body :: PlainText String }) }
+      spec = buildOpenAPISpec @{ getText :: Route GET "text" {} (ok :: { body :: PlainText }) }
         { title: "API"
         , version: "1.0.0"
         }
@@ -130,7 +130,7 @@ testMixedContentTypes = describe "Mixed Content Types in API" do
         @
         { createUser :: Route POST "users" { body :: JSON User } (ok :: { body :: JSON User })
         , uploadFile :: Route POST "upload" { body :: MultipartFormData FileUpload } (ok :: { body :: { success :: Boolean } })
-        , echo :: Route POST "echo" { body :: PlainText String } (ok :: { body :: PlainText String })
+        , echo :: Route POST "echo" { body :: PlainText } (ok :: { body :: PlainText })
         , getDoc :: Route GET "document" {} (ok :: { body :: XML XmlDocument })
         }
         { title: "Multi-Content API"

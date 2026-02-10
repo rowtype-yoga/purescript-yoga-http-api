@@ -5,6 +5,7 @@ module Yoga.HTTP.API.Route.Encoding
   , PlainText
   , XML
   , CustomContentType
+  , Streaming
   , NoBody
   ) where
 
@@ -32,9 +33,9 @@ data MultipartFormData a
 -- | Plain text request/response body (text/plain)
 -- |
 -- | Example:
--- |   Request { body :: PlainText String }
-data PlainText :: Type -> Type
-data PlainText a
+-- |   { body :: PlainText }
+
+data PlainText
 
 -- | XML encoded request/response body (application/xml)
 -- |
@@ -49,6 +50,14 @@ data XML a
 -- |   Request { body :: CustomContentType "application/vnd.api+json" User }
 data CustomContentType :: Symbol -> Type -> Type
 data CustomContentType mime a
+
+-- | Streaming response body (returns a Strom of decoded chunks)
+-- |
+-- | Example:
+-- |   { body :: Streaming Uint8Array }  -- raw binary
+-- |   { body :: Streaming String }      -- text
+data Streaming :: Type -> Type
+data Streaming a
 
 -- | No request body (for GET, DELETE, etc.)
 -- |

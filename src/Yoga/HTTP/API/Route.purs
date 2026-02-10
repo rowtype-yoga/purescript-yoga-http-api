@@ -19,7 +19,7 @@ module Yoga.HTTP.API.Route
 import Yoga.HTTP.API.Path (Path, Root, Lit, Capture, PathCons, Param, QueryParams, Required, type (/), type (:), type (:?), class PathPattern, pathPattern, class ParseParam, parseParam, class ParsePath, parsePath)
 import Yoga.HTTP.API.Route.Auth (BearerToken(..), BasicAuth(..), ApiKeyHeader(..), ApiKeyCookie(..), DigestAuth(..))
 import Yoga.HTTP.API.Route.BearerToken (BearerToken(..))
-import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, XML, CustomContentType, NoBody)
+import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, Streaming, XML, CustomContentType, NoBody)
 import Yoga.HTTP.API.Route.Handler (HandlerFn, NoRequest)
 import Yoga.HTTP.API.Route.HeaderError (HeaderError(..))
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValue, class HeaderValueType, headerValueType, parseHeader, printHeader)

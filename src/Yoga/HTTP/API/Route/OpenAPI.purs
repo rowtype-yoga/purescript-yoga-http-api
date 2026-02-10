@@ -96,6 +96,7 @@ import Prim.Row as Row
 import Prim.RowList (class RowToList, RowList, Cons, Nil)
 import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
+import Data.Reflectable (class Reflectable, reflectType)
 import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, ApiKeyCookie, DigestAuth)
 import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, XML, CustomContentType, NoBody)
@@ -914,7 +915,7 @@ instance RenderJSONSchema a => RenderJSONSchema (MultipartFormData a) where
   renderJSONSchema _ = renderJSONSchema (Proxy :: Proxy a)
 
 -- PlainText encoding wrapper (renders as string)
-instance RenderJSONSchema (PlainText a) where
+instance RenderJSONSchema (PlainText) where
   renderJSONSchema _ = unsafeCoerce { type: "string" }
 
 -- XML encoding wrapper (unwrap and render inner type)
@@ -1008,8 +1009,46 @@ instance (IsSymbol name, RenderJSONSchema a) => RenderJSONSchema (Schema name a)
     in
       unsafeCoerce $ FObject.singleton "$ref" (unsafeCoerce $ "#/components/schemas/" <> schemaName)
 
--- Other metadata wrappers (Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Default)
--- are similar but require more complex constraints, so we'll skip them for now in body schemas
+instance (RenderJSONSchema a, Reflectable v Int) => RenderJSONSchema (MinLength v a) where
+  renderJSONSchema _ = do
+    let innerObj = unsafeCoerce (renderJSONSchema (Proxy :: Proxy a)) :: FObject.Object Foreign
+    unsafeCoerce $ FObject.insert "minLength" (unsafeCoerce (reflectType (Proxy :: Proxy v) :: Int)) innerObj
+
+instance (RenderJSONSchema a, Reflectable v Int) => RenderJSONSchema (MaxLength v a) where
+  renderJSONSchema _ = do
+    let innerObj = unsafeCoerce (renderJSONSchema (Proxy :: Proxy a)) :: FObject.Object Foreign
+    unsafeCoerce $ FObject.insert "maxLength" (unsafeCoerce (reflectType (Proxy :: Proxy v) :: Int)) innerObj
+
+instance (RenderJSONSchema a, Reflectable v Int) => RenderJSONSchema (Minimum v a) where
+  renderJSONSchema _ = do
+    let innerObj = unsafeCoerce (renderJSONSchema (Proxy :: Proxy a)) :: FObject.Object Foreign
+    unsafeCoerce $ FObject.insert "minimum" (unsafeCoerce (reflectType (Proxy :: Proxy v) :: Int)) innerObj
+
+instance (RenderJSONSchema a, Reflectable v Int) => RenderJSONSchema (Maximum v a) where
+  renderJSONSchema _ = do
+    let innerObj = unsafeCoerce (renderJSONSchema (Proxy :: Proxy a)) :: FObject.Object Foreign
+    unsafeCoerce $ FObject.insert "maximum" (unsafeCoerce (reflectType (Proxy :: Proxy v) :: Int)) innerObj
+
+instance (RenderJSONSchema a, IsSymbol pat) => RenderJSONSchema (Pattern pat a) where
+  renderJSONSchema _ = do
+    let innerObj = unsafeCoerce (renderJSONSchema (Proxy :: Proxy a)) :: FObject.Object Foreign
+    let patStr = reflectSymbol (Proxy :: Proxy pat)
+    unsafeCoerce $ if patStr == "" then innerObj
+      else FObject.insert "pattern" (unsafeCoerce patStr) innerObj
+
+instance (RenderJSONSchema a, IsSymbol t) => RenderJSONSchema (Title t a) where
+  renderJSONSchema _ = do
+    let innerObj = unsafeCoerce (renderJSONSchema (Proxy :: Proxy a)) :: FObject.Object Foreign
+    let titleStr = reflectSymbol (Proxy :: Proxy t)
+    unsafeCoerce $ if titleStr == "" then innerObj
+      else FObject.insert "title" (unsafeCoerce titleStr) innerObj
+
+instance (RenderJSONSchema a, IsSymbol val) => RenderJSONSchema (Default val a) where
+  renderJSONSchema _ = do
+    let innerObj = unsafeCoerce (renderJSONSchema (Proxy :: Proxy a)) :: FObject.Object Foreign
+    let defStr = reflectSymbol (Proxy :: Proxy val)
+    unsafeCoerce $ if defStr == "" then innerObj
+      else FObject.insert "default" (unsafeCoerce defStr) innerObj
 
 -- | Helper class to render record fields as OpenAPI properties
 class RenderRecordSchemaRL (rl :: RowList Type) (row :: Row Type) | rl -> row where
@@ -1063,7 +1102,7 @@ instance GetContentType (FormData a) where
 instance GetContentType (MultipartFormData a) where
   getContentType _ = "multipart/form-data"
 
-instance GetContentType (PlainText a) where
+instance GetContentType (PlainText) where
   getContentType _ = "text/plain"
 
 instance GetContentType (XML a) where
@@ -1184,7 +1223,7 @@ instance RenderJSONSchema a => RenderRequestBodySchema (MultipartFormData a) whe
     }
 
 -- PlainText: request body with text/plain content type
-instance RenderRequestBodySchema (PlainText a) where
+instance RenderRequestBodySchema (PlainText) where
   renderRequestBodySchema _ = Just
     { required: true
     , content: unsafeCoerce
@@ -1211,6 +1250,16 @@ instance (IsSymbol mime, RenderJSONSchema a) => RenderRequestBodySchema (CustomC
       contentObj = FObject.singleton mimeType (unsafeCoerce { schema: renderJSONSchema (Proxy :: Proxy a) })
     in
       Just { required: true, content: unsafeCoerce contentObj }
+
+-- Record: bare record treated as application/json
+instance RenderJSONSchema (Record row) => RenderRequestBodySchema (Record row) where
+  renderRequestBodySchema _ = Just
+    { required: true
+    , content: unsafeCoerce
+        { "application/json":
+            { schema: renderJSONSchema (Proxy :: Proxy (Record row)) }
+        }
+    }
 
 --------------------------------------------------------------------------------
 -- Response Headers Schema Generation
@@ -1516,7 +1565,7 @@ instance CollectSchemas a => CollectSchemas (MultipartFormData a) where
   collectSchemas _ = collectSchemas (Proxy :: Proxy a)
 
 -- PlainText wrapper: no nested schemas to collect
-instance CollectSchemas (PlainText a) where
+instance CollectSchemas (PlainText) where
   collectSchemas _ = FObject.empty
 
 -- XML wrapper: unwrap and recurse
@@ -1672,7 +1721,7 @@ instance (RowToList row rl, CollectSchemaNamesRL rl names) => CollectSchemaNames
 instance CollectSchemaNames a names => CollectSchemaNames (JSON a) names
 instance CollectSchemaNames a names => CollectSchemaNames (FormData a) names
 instance CollectSchemaNames a names => CollectSchemaNames (MultipartFormData a) names
-instance CollectSchemaNames (PlainText a) ()
+instance CollectSchemaNames (PlainText) ()
 instance CollectSchemaNames a names => CollectSchemaNames (XML a) names
 instance CollectSchemaNames a names => CollectSchemaNames (CustomContentType mime a) names
 instance CollectSchemaNames NoBody ()

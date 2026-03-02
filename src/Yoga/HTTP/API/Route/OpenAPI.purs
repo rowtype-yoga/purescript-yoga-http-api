@@ -29,6 +29,8 @@ module Yoga.HTTP.API.Route.OpenAPI
   , renderVariantResponseSchema
   , class RenderVariantResponseSchemaRL
   , renderVariantResponseSchemaRL
+  , class RenderResponseContent
+  , renderResponseContent
   , class RenderJSONSchema
   , renderJSONSchema
   , class RenderRecordSchemaRL
@@ -103,7 +105,9 @@ import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainTex
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, Callback, Examples, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasExamples, examples)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
-import Yoga.HTTP.API.Route.Response (class ToResponse)
+import Prim.Boolean (True, False)
+import Data.Unit (Unit)
+import Yoga.HTTP.API.Route.Response (class ToResponse, class IsUnitBody)
 import Yoga.HTTP.API.Route.StatusCode (class StatusCodeMap, statusCodeFor, statusCodeToString)
 import Yoga.JSON (class WriteForeign, writeImpl, unsafeStringify)
 import Yoga.JSON as Yoga.JSON
@@ -1412,10 +1416,9 @@ instance renderVariantResponseSchemaRLCons ::
   ( IsSymbol label
   , StatusCodeMap label
   , ToResponse recordType headers body
+  , IsUnitBody body isUnit
+  , RenderResponseContent isUnit headers body
   , RenderResponseHeadersSchema headers
-  , RenderJSONSchema body
-  , GetContentType body
-  -- , HasLinks recordType
   , RenderVariantResponseSchemaRL tail
   ) =>
   RenderVariantResponseSchemaRL (Cons label recordType tail) where
@@ -1423,29 +1426,35 @@ instance renderVariantResponseSchemaRLCons ::
     let
       statusCode = statusCodeFor (Proxy :: Proxy label)
       statusCodeStr = statusCodeToString statusCode
-      headersObj = renderResponseHeadersSchema (Proxy :: Proxy headers)
-      bodySchema = renderJSONSchema (Proxy :: Proxy body)
-      contentType = getContentType (Proxy :: Proxy body)
-      contentObj = FObject.singleton contentType (unsafeCoerce { schema: bodySchema })
-      -- linksArray = links (Proxy :: Proxy recordType)
-      -- linksObj =
-      --   if Array.null linksArray then FObject.empty
-      --   else FObject.fromFoldable $ linksArray <#> \link ->
-      --     Tuple link.name $ unsafeCoerce $ FObject.fromFoldable
-      --       [ Tuple "operationId" (unsafeCoerce link.operationId)
-      --       , Tuple "parameters" link.parameters
-      --       ]
-      responseObjBase =
-        { description: "Successful response"
-        , headers: headersObj
-        , content: unsafeCoerce contentObj
-        }
-      responseObj = unsafeCoerce responseObjBase
-      -- if FObject.isEmpty linksObj then unsafeCoerce responseObjBase
-      -- else unsafeCoerce $ FObject.insert "links" (unsafeCoerce linksObj) (unsafeCoerce responseObjBase :: FObject.Object Foreign)
+      responseObj = renderResponseContent (Proxy :: Proxy isUnit) (Proxy :: Proxy headers) (Proxy :: Proxy body)
       rest = renderVariantResponseSchemaRL (Proxy :: Proxy tail)
     in
       FObject.insert statusCodeStr responseObj rest
+
+class RenderResponseContent (isUnit :: Boolean) (headers :: Row Type) (body :: Type) where
+  renderResponseContent :: Proxy isUnit -> Proxy headers -> Proxy body -> ResponseObject
+
+-- Unit body: no content field
+instance RenderResponseHeadersSchema headers =>
+  RenderResponseContent True headers Unit where
+  renderResponseContent _ _ _ =
+    { description: "No content"
+    , headers: renderResponseHeadersSchema (Proxy :: Proxy headers)
+    , content: unsafeCoerce (FObject.empty :: FObject.Object Foreign)
+    }
+
+-- Non-Unit body: render content schema
+else instance (RenderResponseHeadersSchema headers, RenderJSONSchema body, GetContentType body) =>
+  RenderResponseContent False headers body where
+  renderResponseContent _ _ _ = do
+    let headersObj = renderResponseHeadersSchema (Proxy :: Proxy headers)
+    let bodySchema = renderJSONSchema (Proxy :: Proxy body)
+    let contentType = getContentType (Proxy :: Proxy body)
+    let contentObj = FObject.singleton contentType (unsafeCoerce { schema: bodySchema })
+    { description: "Successful response"
+    , headers: headersObj
+    , content: unsafeCoerce contentObj
+    }
 
 -- --------------------------------------------------------------------------------
 -- -- RenderCallbacks: Render full callback objects for OpenAPI

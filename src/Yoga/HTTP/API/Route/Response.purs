@@ -6,6 +6,7 @@ module Yoga.HTTP.API.Route.Response
   , EmptyResponse
   , class ToResponse
   , class ToResponseRL
+  , class IsUnitBody
   , respond
   , respondWith
   , respondNoHeaders
@@ -147,6 +148,7 @@ import Data.Symbol (class IsSymbol)
 import Data.Unit (Unit, unit)
 import Data.Variant (Variant)
 import Data.Variant as Variant
+import Prim.Boolean (True, False)
 import Prim.Row (class Cons)
 import Prim.RowList as RL
 import Prim.TypeError (class Fail, Text, Above)
@@ -208,8 +210,14 @@ instance toResponseRLBodyHeaders ::
 else instance toResponseRLBodyOnly ::
   ToResponseRL (RL.Cons "body" body RL.Nil) () body
 
--- Invalid record structure: has fields other than "body" and "headers"
-else instance toResponseRLInvalid ::
+-- { headers :: Record h } (no body)
+else instance ToResponseRL (RL.Cons "headers" (Record headers) RL.Nil) headers Unit
+
+-- {} (empty record: no body, no headers)
+else instance ToResponseRL RL.Nil () Unit
+
+-- Invalid record structure
+else instance
   ( Fail
       ( Above
           (Text "Invalid response record structure.")
@@ -218,7 +226,7 @@ else instance toResponseRLInvalid ::
               ( Above
                   (Text "Response records must contain ONLY:")
                   ( Above
-                      (Text "  • body :: YourBodyType              (required)")
+                      (Text "  • body :: YourBodyType              (optional)")
                       ( Above
                           (Text "  • headers :: Record (...)         (optional)")
                           ( Above
@@ -230,8 +238,14 @@ else instance toResponseRLInvalid ::
                                       ( Above
                                           (Text "  { body: user, headers: { \"Location\": \"/users/123\" } }")
                                           ( Above
-                                              (Text "")
-                                              (Text "Do not include 'status', 'statusCode', or other fields.")
+                                              (Text "  { headers: { \"X-Exists\": \"true\" } }")
+                                              ( Above
+                                                  (Text "  {}")
+                                                  ( Above
+                                                      (Text "")
+                                                      (Text "Do not include 'status', 'statusCode', or other fields.")
+                                                  )
+                                              )
                                           )
                                       )
                                   )
@@ -244,6 +258,14 @@ else instance toResponseRLInvalid ::
       )
   ) =>
   ToResponseRL rl headers body
+
+--------------------------------------------------------------------------------
+-- IsUnitBody: Type-level Boolean dispatch for body presence
+--------------------------------------------------------------------------------
+
+class IsUnitBody (body :: Type) (isUnit :: Boolean) | body -> isUnit
+instance IsUnitBody Unit True
+else instance IsUnitBody body False
 
 --------------------------------------------------------------------------------
 -- Response Construction Helpers

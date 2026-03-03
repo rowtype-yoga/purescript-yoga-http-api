@@ -8,7 +8,7 @@ package:
       githubOwner: rowtype-yoga
       githubRepo: purescript-yoga-http-api
   dependencies:
-    - aff: ">=7.0.0 <9.0.0"
+    - aff: ">=8.0.0 <9.0.0"
     - arrays: ">=7.3.0 <8.0.0"
     - either: ">=6.1.0 <7.0.0"
     - foldable-traversable: ">=6.0.0 <7.0.0"
@@ -25,8 +25,8 @@ package:
     - undefined-is-not-a-problem: ">=1.1.0 <2.0.0"
     - unsafe-coerce: ">=6.0.0 <7.0.0"
     - variant: ">=8.0.0 <9.0.0"
-    - yoga-json: ">=5.1.0 <6.0.0"
-    - yoga-options: ">=0.1.0 <0.2.0"
+    - yoga-json: ">=5.2.1 <6.0.0"
+    - yoga-options: ">=0.1.1 <0.2.0"
   test:
     main: Test.Operators
     dependencies:

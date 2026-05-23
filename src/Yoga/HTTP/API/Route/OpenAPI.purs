@@ -106,10 +106,9 @@ import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, Callback, Examples, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasExamples, examples)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Prim.Boolean (True, False)
-import Data.Unit (Unit)
 import Yoga.HTTP.API.Route.Response (class ToResponse, class IsUnitBody)
 import Yoga.HTTP.API.Route.StatusCode (class StatusCodeMap, statusCodeFor, statusCodeToString)
-import Yoga.JSON (class WriteForeign, writeImpl, unsafeStringify)
+import Yoga.JSON (class WriteForeign, writeImpl)
 import Yoga.JSON as Yoga.JSON
 
 --------------------------------------------------------------------------------

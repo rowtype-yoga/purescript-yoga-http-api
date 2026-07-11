@@ -4,6 +4,7 @@ module Yoga.HTTP.API.Route.Method
   , PUT
   , DELETE
   , PATCH
+  , QUERY
   ) where
 
 --------------------------------------------------------------------------------
@@ -24,3 +25,6 @@ data DELETE
 
 -- | HTTP PATCH method
 data PATCH
+
+-- | HTTP QUERY method
+data QUERY

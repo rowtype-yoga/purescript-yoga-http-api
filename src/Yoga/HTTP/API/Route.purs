@@ -23,7 +23,7 @@ import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainTex
 import Yoga.HTTP.API.Route.Handler (HandlerFn, NoRequest)
 import Yoga.HTTP.API.Route.HeaderError (HeaderError(..))
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValue, class HeaderValueType, headerValueType, parseHeader, printHeader)
-import Yoga.HTTP.API.Route.Method (DELETE, GET, PATCH, POST, PUT)
+import Yoga.HTTP.API.Route.Method (DELETE, GET, PATCH, POST, PUT, QUERY)
 import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, collectOperations, buildOpenAPISpec, buildOpenAPISpec', OpenAPISpec, ServerObject, class ToOpenAPI, toOpenAPI)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (class HasDescription, description, class HasExample, example, class HasFormat, format, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasDeprecated, deprecated, class HasEnum, enum, class GenericEnumValues, genericEnumValues, class HasOperationMetadata, operationMetadata, class HasExamples, examples, OperationMetadata, Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, Callback, Link, Examples, ExampleValue, ExampleWithSummary, ExampleObject)
 import Yoga.HTTP.API.Route.Response (Response(..), ResponseData, respondNoHeaders, respondWith)

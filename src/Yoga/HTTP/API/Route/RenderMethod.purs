@@ -4,7 +4,7 @@ module Yoga.HTTP.API.Route.RenderMethod
   ) where
 
 import Type.Proxy (Proxy)
-import Yoga.HTTP.API.Route.Method (DELETE, GET, PATCH, POST, PUT)
+import Yoga.HTTP.API.Route.Method (DELETE, GET, PATCH, POST, PUT, QUERY)
 
 --------------------------------------------------------------------------------
 -- RenderMethod Typeclass
@@ -32,3 +32,6 @@ instance RenderMethod DELETE where
 
 instance RenderMethod PATCH where
   renderMethod _ = "patch"
+
+instance RenderMethod QUERY where
+  renderMethod _ = "query"

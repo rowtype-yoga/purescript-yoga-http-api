@@ -9,7 +9,7 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (type (/), type (:))
-import Yoga.HTTP.API.Route (GET, POST, Route, JSON, respondNoHeaders, buildOpenAPISpec, collectOperations, mkHandler, apiHandlers)
+import Yoga.HTTP.API.Route (GET, POST, QUERY, Route, JSON, respondNoHeaders, buildOpenAPISpec, collectOperations, mkHandler, apiHandlers)
 import Yoga.JSON (writeJSON)
 import ViTest (ViTest, describe, test)
 import ViTest.Expect (expectToBe)
@@ -29,6 +29,10 @@ type TestAPI =
   , createUser :: Route POST "users" { body :: JSON User } (created :: { body :: User })
   }
 
+type QueryAPI =
+  { queryUsers :: Route QUERY "users" {} (ok :: { body :: Array User })
+  }
+
 --------------------------------------------------------------------------------
 -- Tests
 --------------------------------------------------------------------------------
@@ -44,10 +48,15 @@ testCollectOperations = describe "API Record - CollectOperations" do
     let methods = ops <#> _.method
     expectToBe true (Array.elem "get" methods)
 
-  test "contains POST method" do
+  _ <- test "contains POST method" do
     let ops = collectOperations (Proxy :: _ TestAPI)
     let methods = ops <#> _.method
     expectToBe true (Array.elem "post" methods)
+
+  test "contains QUERY method" do
+    let ops = collectOperations (Proxy :: _ QueryAPI)
+    let methods = ops <#> _.method
+    expectToBe true (Array.elem "query" methods)
 
 testOperationIds :: Effect ViTest
 testOperationIds = describe "API Record - OperationId" do

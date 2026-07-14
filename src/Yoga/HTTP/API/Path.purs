@@ -28,12 +28,12 @@ import Data.Array as Array
 import Data.Either (Either(..))
 import Data.Int as Int
 import Data.Maybe (Maybe(..))
+import Data.Number as Number
 import Data.String (Pattern(..), split)
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Prim.Row as Row
 import Record as Record
 import Type.Proxy (Proxy(..))
-import Unsafe.Coerce (unsafeCoerce)
 --------------------------------------------------------------------------------
 -- Type-Level Path DSL
 --------------------------------------------------------------------------------
@@ -237,9 +237,9 @@ instance parseParamInt :: ParseParam Int where
     Just n -> Right n
 
 instance parseParamNumber :: ParseParam Number where
-  parseParam s = case Int.fromString s of
+  parseParam s = case Number.fromString s of
     Nothing -> Left $ "Expected a number but got: " <> s
-    Just n -> Right (Int.toNumber n) -- Simple version, doesn't handle floats
+    Just n -> Right n
 
 
 -- | Parse a URL string into a record of typed path parameters
@@ -267,15 +267,17 @@ instance parsePathLit :: IsSymbol s => ParsePath (Path (Lit s)) () where
 instance parsePathCapture ::
   ( IsSymbol name
   , ParseParam ty
+  , Row.Cons name ty () params
+  , Row.Lacks name ()
   ) =>
-  ParsePath (Path (Capture name ty)) (name :: ty) where
+  ParsePath (Path (Capture name ty)) params where
   parsePath _ url = do
     -- Remove leading "/"
     let segments = Array.filter (_ /= "") $ split (Pattern "/") url
     case segments of
       [ segment ] -> case (parseParam segment :: Either String ty) of
         Left _ -> Nothing
-        Right value -> pure $ unsafeCoerce { value } -- Simplified: we'd need proper record construction
+        Right value -> pure $ Record.insert (Proxy :: Proxy name) value {}
       _ -> Nothing
 
 -- Recursive case: Lit segment followed by more

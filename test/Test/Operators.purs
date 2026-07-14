@@ -16,6 +16,8 @@ import Test.ContentTypeTest as ContentTypeTest
 import Test.ExamplesTest as ExamplesTest
 import Test.ComprehensiveExample as ComprehensiveExample
 import CompileFailTest.Spec as CompileFailTest
+import Test.PublicSurfaceTest as PublicSurfaceTest
+import Test.StreamingTest as StreamingTest
 
 spec :: Effect ViTest
 spec = do
@@ -69,6 +71,8 @@ spec = do
   _ <- ExamplesTest.testComplexExampleObject
   _ <- ComprehensiveExample.testComprehensiveExample
   _ <- SchemaComponentTest.testSchemaComponents
+  _ <- PublicSurfaceTest.spec
+  _ <- StreamingTest.spec
   CompileFailTest.testCompileFail
 
 main :: ViTest

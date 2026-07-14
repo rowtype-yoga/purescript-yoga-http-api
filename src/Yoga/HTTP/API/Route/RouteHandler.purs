@@ -1,8 +1,11 @@
 module Yoga.HTTP.API.Route.RouteHandler
   ( Handler
   , class RouteHandler
+  , class RouteCookies
   , mkHandler
+  , mkHandlerWithCookies
   , runHandler
+  , runHandlerWithCookies
   , class APIHandlers
   , apiHandlers
   , class ApiRecord
@@ -15,6 +18,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Route.Handler
   ( HandlerFn
   , Request
+  , HandlerFnWithCookies
   , class DefaultRequestFields
   , class EncodingBody
   , class SegmentPathParams
@@ -65,6 +69,21 @@ else instance
     body
     respVariant
 
+-- | Compute the cookie row declared by a route request.
+class RouteCookies (route :: Type) (cookies :: Row Type) | route -> cookies
+
+instance
+  DefaultRequestFields partialRequest headers cookies encoding =>
+  RouteCookies
+    (Route method segments (Record partialRequest) response)
+    cookies
+
+else instance
+  DefaultRequestFields partialRequest headers cookies encoding =>
+  RouteCookies
+    (Route method segments (Request (Record partialRequest)) response)
+    cookies
+
 -- | A handler tied to a specific route type.
 -- |
 -- | Usage:
@@ -72,21 +91,45 @@ else instance
 -- |   userHandler = mkHandler \{ path } -> ...
 foreign import data Handler :: Type -> Type
 
--- | Create a Handler from a function matching the route's type.
+-- | Create a handler from the route's complete typed request.
+-- | The cookie row is inferred from the route, so cookie-aware routes need no
+-- | alternate constructor.
 mkHandler
-  :: forall route pathParams queryParams reqHeaders body respVariant
+  :: forall route pathParams queryParams reqHeaders reqCookies body respVariant
    . RouteHandler route pathParams queryParams reqHeaders body respVariant
-  => HandlerFn pathParams queryParams reqHeaders body respVariant
+  => RouteCookies route reqCookies
+  => HandlerFnWithCookies pathParams queryParams reqHeaders reqCookies body respVariant
   -> Handler route
 mkHandler = unsafeCoerce
 
--- | Extract the handler function from a Handler.
+-- | Compatibility name for cookie-aware handlers. Prefer `mkHandler`.
+mkHandlerWithCookies
+  :: forall route pathParams queryParams reqHeaders reqCookies body respVariant
+   . RouteHandler route pathParams queryParams reqHeaders body respVariant
+  => RouteCookies route reqCookies
+  => HandlerFnWithCookies pathParams queryParams reqHeaders reqCookies body respVariant
+  -> Handler route
+mkHandlerWithCookies = mkHandler
+
+-- | Run a handler for a route whose cookie row is empty.
+-- | Cookie-bearing routes must use `runHandlerWithCookies`.
 runHandler
   :: forall route pathParams queryParams reqHeaders body respVariant
    . RouteHandler route pathParams queryParams reqHeaders body respVariant
+  => RouteCookies route ()
   => Handler route
   -> HandlerFn pathParams queryParams reqHeaders body respVariant
-runHandler = unsafeCoerce
+runHandler handler { path, query, headers, body } =
+  (unsafeCoerce handler) { path, query, headers, cookies: {}, body }
+
+-- | Run the canonical cookie-aware handler representation.
+runHandlerWithCookies
+  :: forall route pathParams queryParams reqHeaders reqCookies body respVariant
+   . RouteHandler route pathParams queryParams reqHeaders body respVariant
+  => RouteCookies route reqCookies
+  => Handler route
+  -> HandlerFnWithCookies pathParams queryParams reqHeaders reqCookies body respVariant
+runHandlerWithCookies = unsafeCoerce
 
 --------------------------------------------------------------------------------
 -- APIHandlers: Map an API record row to a handler record row

@@ -54,6 +54,8 @@ module Yoga.HTTP.API.Route.OpenAPIMetadata
   , ExampleObject
   , class HasExamples
   , examples
+  , class RenderLinkParametersRL
+  , renderLinkParametersRL
   , class HasLinks
   , links
   , LinkMetadata
@@ -201,7 +203,7 @@ infixl 5 type Callback as #
 -- | Example:
 -- |   ok :: { body :: User }
 -- |     # Link "deleteUser" "deleteUserById" ( userId :: "$response.body#/id" )
-data Link :: Type -> Symbol -> Symbol -> Row Type -> Type
+data Link :: Type -> Symbol -> Symbol -> Row Symbol -> Type
 data Link inner linkName operationId parametersRow
 
 infixl 5 type Link as :#
@@ -767,19 +769,19 @@ type LinkMetadata =
 
 -- | Helper class to render link parameters row as a Foreign object
 -- | Each field in the row should have a Symbol literal type as its value
-class RenderLinkParametersRL (rl :: RowList Type) where
+class RenderLinkParametersRL (rl :: RowList Symbol) where
   renderLinkParametersRL :: Proxy rl -> FObject.Object Foreign
 
 instance RenderLinkParametersRL Nil where
   renderLinkParametersRL _ = FObject.empty
 
 -- For each parameter, the type is a Symbol literal representing the runtime expression
--- We use Reflectable to extract the Symbol value from the literal type
-instance (IsSymbol paramName, Reflectable expression String, RenderLinkParametersRL tail) => RenderLinkParametersRL (Cons paramName expression tail) where
+-- Reflect the Symbol directly into the OpenAPI runtime expression.
+instance (IsSymbol paramName, IsSymbol expression, RenderLinkParametersRL tail) => RenderLinkParametersRL (Cons paramName expression tail) where
   renderLinkParametersRL _ =
     let
       name = reflectSymbol (Proxy :: Proxy paramName)
-      expr = reflectType (Proxy :: Proxy expression)
+      expr = reflectSymbol (Proxy :: Proxy expression)
       rest = renderLinkParametersRL (Proxy :: Proxy tail)
     in
       FObject.insert name (unsafeCoerce expr) rest

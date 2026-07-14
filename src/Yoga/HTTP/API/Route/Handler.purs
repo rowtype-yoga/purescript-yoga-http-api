@@ -1,5 +1,6 @@
 module Yoga.HTTP.API.Route.Handler
   ( HandlerFn
+  , HandlerFnWithCookies
   , Request(..)
   , NoRequest
   , class DefaultRequestFields
@@ -21,7 +22,7 @@ import Effect.Aff (Aff)
 import Prim.Row as Row
 import Prim.RowList as RL
 import Yoga.HTTP.API.Path (Path, PathCons, Capture, Param, QueryParams, Required)
-import Yoga.HTTP.API.Route.Encoding (JSON, NoBody)
+import Yoga.HTTP.API.Route.Encoding (CustomContentType, FormData, JSON, MultipartFormData, NoBody, PlainText, XML)
 
 --------------------------------------------------------------------------------
 -- NoRequest: Type alias for empty request (no headers, cookies, or body)
@@ -57,6 +58,15 @@ type HandlerFn pathParams queryParams reqHeaders body respVariant =
   { path :: Record pathParams
   , query :: Record queryParams
   , headers :: Record reqHeaders
+  , body :: body
+  }
+  -> Aff (Variant respVariant)
+
+type HandlerFnWithCookies pathParams queryParams reqHeaders reqCookies body respVariant =
+  { path :: Record pathParams
+  , query :: Record queryParams
+  , headers :: Record reqHeaders
+  , cookies :: Record reqCookies
   , body :: body
   }
   -> Aff (Variant respVariant)
@@ -158,6 +168,11 @@ else instance captureParamsDefault :: CaptureParams s ()
 class EncodingBody (encoding :: Type) (body :: Type) | encoding -> body
 
 instance encodingBodyJSON :: EncodingBody (JSON a) a
+instance encodingBodyFormData :: EncodingBody (FormData a) a
+instance encodingBodyMultipartFormData :: EncodingBody (MultipartFormData a) a
+instance encodingBodyPlainText :: EncodingBody PlainText String
+instance encodingBodyXML :: EncodingBody (XML a) a
+instance encodingBodyCustomContentType :: EncodingBody (CustomContentType mime a) a
 instance encodingBodyNoBody :: EncodingBody NoBody Unit
 instance EncodingBody (Record row) (Record row)
 

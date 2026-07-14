@@ -50,10 +50,9 @@ instance HeaderValue Int where
 -- | Note: parseHeader always succeeds for Maybe types (returns Just or Nothing)
 instance HeaderValue a => HeaderValue (Maybe a) where
   parseHeader s = Right
-    ( case parseHeader s of
-        Right val -> Just val
-        Left _ -> Nothing
-    )
+    case parseHeader s of
+      Right val -> Just val
+      Left _ -> Nothing
   printHeader Nothing = ""
   printHeader (Just a) = printHeader a
 

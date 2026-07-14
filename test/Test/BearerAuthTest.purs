@@ -3,11 +3,10 @@ module Test.BearerAuthTest where
 import Prelude
 
 import Data.Array as Array
-import Data.Maybe (Maybe(..))
 import Data.String as String
 import Effect (Effect)
 import Yoga.HTTP.API.Route (GET, Route, buildOpenAPISpec)
-import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, DigestAuth)
+import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, ApiKeyCookie, DigestAuth)
 import Yoga.JSON (writeJSON)
 import Test.OpenAPIValidation (validate)
 import ViTest (ViTest, describe, test)
@@ -38,6 +37,18 @@ type MultiAuthAPI =
   , basicEndpoint :: Route GET "basic" { headers :: { authorization :: BasicAuth } } (ok :: { body :: { message :: String } })
   , apiKeyEndpoint :: Route GET "apikey" { headers :: { xApiKey :: ApiKeyHeader } } (ok :: { body :: { message :: String } })
   }
+
+type ThreeFactorAPI =
+  { combined :: Route GET "combined"
+      { headers :: { authorization :: BearerToken, apiKey :: ApiKeyHeader }
+      , cookies :: { session :: ApiKeyCookie }
+      }
+      (ok :: { body :: { message :: String } })
+  }
+
+foreign import securityShape
+  :: String
+  -> { requirementCount :: Int, schemeCount :: Int }
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -130,7 +141,7 @@ testDigestAuth = describe "DigestAuth Authentication" do
     expectToBe true (String.contains (String.Pattern "\"scheme\":\"digest\"") json)
 
 testMultipleAuthTypes :: Effect ViTest
-testMultipleAuthTypes = describe "Multiple Authentication Types" do
+testMultipleAuthTypes = describe "Declare authentication requirements in route types" do
   _ <- test "All auth types appear in security schemes" do
     let spec = buildOpenAPISpec @MultiAuthAPI { title: "Auth API", version: "1.0.0" }
     let json = writeJSON spec
@@ -144,3 +155,9 @@ testMultipleAuthTypes = describe "Multiple Authentication Types" do
     -- Check that all endpoints have empty parameters arrays
     let hasEmptyParams = String.contains (String.Pattern "\"parameters\":[]") json
     expectToBe true hasEmptyParams
+
+  test "one request record → one OpenAPI AND requirement" do
+    let spec = buildOpenAPISpec @ThreeFactorAPI { title: "Auth API", version: "1.0.0" }
+    let shape = securityShape (writeJSON spec)
+    expectToBe 1 shape.requirementCount
+    expectToBe 3 shape.schemeCount

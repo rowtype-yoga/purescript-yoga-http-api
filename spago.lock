@@ -9,7 +9,13 @@
               "aff": ">=8.0.0 <9.0.0"
             },
             {
+              "arraybuffer-types": ">=3.0.2 <4.0.0"
+            },
+            {
               "arrays": ">=7.3.0 <8.0.0"
+            },
+            {
+              "effect": ">=4.0.0 <5.0.0"
             },
             {
               "either": ">=6.1.0 <7.0.0"
@@ -30,10 +36,22 @@
               "integers": ">=6.0.0 <7.0.0"
             },
             {
+              "js-promise": ">=1.0.0 <2.0.0"
+            },
+            {
+              "js-promise-aff": ">=1.0.0 <2.0.0"
+            },
+            {
               "maybe": ">=6.0.0 <7.0.0"
             },
             {
               "newtype": ">=5.0.0 <6.0.0"
+            },
+            {
+              "nullable": ">=6.0.0 <7.0.0"
+            },
+            {
+              "numbers": ">=9.0.1 <10.0.0"
             },
             {
               "prelude": ">=6.0.2 <7.0.0"
@@ -197,8 +215,8 @@
     },
     "compile-fail": {
       "type": "registry",
-      "version": "0.3.1",
-      "integrity": "sha256-nd5BrFIr3ppJb1LwCZPQPyLaImm4OGmycqUwg123XqU=",
+      "version": "0.4.0",
+      "integrity": "sha256-q0svAx4ZfokQcyCRotvhcnbaPCNLwxkjRVNUN6+Ufgg=",
       "dependencies": [
         "aff",
         "arrays",
@@ -1084,8 +1102,8 @@
     },
     "spec": {
       "type": "registry",
-      "version": "8.1.1",
-      "integrity": "sha256-b6qjDb7lUJGLV+WEoywLu6BCXC4zGpfbN43mTL+vBeI=",
+      "version": "8.1.2",
+      "integrity": "sha256-klPPJ6lBQI1CGOAdLJ+ZoGRt8XZippkTKjn53BrSkL0=",
       "dependencies": [
         "aff",
         "ansi",

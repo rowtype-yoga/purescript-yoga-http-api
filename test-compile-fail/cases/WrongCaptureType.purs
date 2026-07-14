@@ -1,4 +1,4 @@
--- EXPECT: Could not match type
+-- EXPECT: No type class instance was found
 module Test.CompileFail.WrongCaptureType where
 
 import Data.Maybe (Maybe)

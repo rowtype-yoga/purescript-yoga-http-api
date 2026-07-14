@@ -44,6 +44,7 @@ module Yoga.HTTP.API.Route.OpenAPI
   , detectCookieSecurity
   , class DetectCookieSecurityRL
   , detectCookieSecurityRL
+  , mergeSecurityRequirements
   , class ToOpenAPI
   , toOpenAPIImpl
   , toOpenAPI
@@ -101,7 +102,7 @@ import Type.Proxy (Proxy(..))
 import Data.Reflectable (class Reflectable, reflectType)
 import Unsafe.Coerce (unsafeCoerce)
 import Yoga.HTTP.API.Route.Auth (BearerToken, BasicAuth, ApiKeyHeader, ApiKeyCookie, DigestAuth)
-import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, XML, CustomContentType, NoBody)
+import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, PlainText, Streaming, XML, CustomContentType, NoBody)
 import Yoga.HTTP.API.Route.HeaderValue (class HeaderValueType, headerValueType)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (Description, Example, Format, Minimum, Maximum, Pattern, MinLength, MaxLength, Title, Nullable, Default, Deprecated, Enum, Schema, Callback, Examples, class HasDescription, description, class HasExample, example, class HasFormat, format, class HasDeprecated, deprecated, class HasMinimum, minimum, class HasMaximum, maximum, class HasPattern, pattern, class HasMinLength, minLength, class HasMaxLength, maxLength, class HasTitle, title, class HasNullable, nullable, class HasDefault, default, class HasEnum, enum, class HasExamples, examples)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
@@ -325,6 +326,18 @@ else instance
 --------------------------------------------------------------------------------
 -- Security Detection
 --------------------------------------------------------------------------------
+-- | Combine required schemes into one OpenAPI Security Requirement Object.
+-- | Keys within one object are AND requirements; separate objects would mean OR.
+mergeSecurityRequirements :: Array (Array Foreign) -> Array Foreign
+mergeSecurityRequirements groups =
+  let
+    merged = foldl
+      (\acc requirement -> FObject.union acc (unsafeCoerce requirement))
+      FObject.empty
+      (Array.concat groups)
+  in
+    if FObject.size merged == 0 then [] else [ unsafeCoerce merged ]
+
 
 -- | Detect security requirements in request headers
 -- | Returns an array of security requirement objects (e.g., [{ bearerAuth: [] }])
@@ -348,7 +361,7 @@ instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name BearerToken tai
     let
       bearerAuth = unsafeCoerce $ FObject.singleton "bearerAuth" ([] :: Array String)
     in
-      [ bearerAuth ]
+      mergeSecurityRequirements [ [ bearerAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: BearerToken wrapped in Description
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Description desc BearerToken) tail) where
@@ -356,7 +369,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Descripti
     let
       bearerAuth = unsafeCoerce $ FObject.singleton "bearerAuth" ([] :: Array String)
     in
-      [ bearerAuth ]
+      mergeSecurityRequirements [ [ bearerAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: BearerToken wrapped in Example
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example ex BearerToken) tail) where
@@ -364,7 +377,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example e
     let
       bearerAuth = unsafeCoerce $ FObject.singleton "bearerAuth" ([] :: Array String)
     in
-      [ bearerAuth ]
+      mergeSecurityRequirements [ [ bearerAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: BearerToken wrapped in Deprecated
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecated BearerToken) tail) where
@@ -372,7 +385,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecate
     let
       bearerAuth = unsafeCoerce $ FObject.singleton "bearerAuth" ([] :: Array String)
     in
-      [ bearerAuth ]
+      mergeSecurityRequirements [ [ bearerAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: BasicAuth found
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name BasicAuth tail) where
@@ -380,7 +393,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name BasicAuth 
     let
       basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
     in
-      [ basicAuth ]
+      mergeSecurityRequirements [ [ basicAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: BasicAuth wrapped in Description
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Description desc BasicAuth) tail) where
@@ -388,7 +401,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Descripti
     let
       basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
     in
-      [ basicAuth ]
+      mergeSecurityRequirements [ [ basicAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: BasicAuth wrapped in Example
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example ex BasicAuth) tail) where
@@ -396,7 +409,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example e
     let
       basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
     in
-      [ basicAuth ]
+      mergeSecurityRequirements [ [ basicAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: BasicAuth wrapped in Deprecated
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecated BasicAuth) tail) where
@@ -404,7 +417,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecate
     let
       basicAuth = unsafeCoerce $ FObject.singleton "basicAuth" ([] :: Array String)
     in
-      [ basicAuth ]
+      mergeSecurityRequirements [ [ basicAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: ApiKeyHeader found
 else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name ApiKeyHeader tail) where
@@ -413,7 +426,7 @@ else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Con
       keyName = reflectSymbol (Proxy :: Proxy name)
       apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
     in
-      [ apiKeyAuth ]
+      mergeSecurityRequirements [ [ apiKeyAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: ApiKeyHeader wrapped in Description
 else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name (Description desc ApiKeyHeader) tail) where
@@ -422,7 +435,7 @@ else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Con
       keyName = reflectSymbol (Proxy :: Proxy name)
       apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
     in
-      [ apiKeyAuth ]
+      mergeSecurityRequirements [ [ apiKeyAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: ApiKeyHeader wrapped in Example
 else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name (Example ex ApiKeyHeader) tail) where
@@ -431,7 +444,7 @@ else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Con
       keyName = reflectSymbol (Proxy :: Proxy name)
       apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
     in
-      [ apiKeyAuth ]
+      mergeSecurityRequirements [ [ apiKeyAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: ApiKeyHeader wrapped in Deprecated
 else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Cons name (Deprecated ApiKeyHeader) tail) where
@@ -440,7 +453,7 @@ else instance (DetectSecurityRL tail, IsSymbol name) => DetectSecurityRL (RL.Con
       keyName = reflectSymbol (Proxy :: Proxy name)
       apiKeyAuth = unsafeCoerce $ FObject.singleton (keyName <> "ApiKey") ([] :: Array String)
     in
-      [ apiKeyAuth ]
+      mergeSecurityRequirements [ [ apiKeyAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: DigestAuth found
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name DigestAuth tail) where
@@ -448,7 +461,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name DigestAuth
     let
       digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
     in
-      [ digestAuth ]
+      mergeSecurityRequirements [ [ digestAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: DigestAuth wrapped in Description
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Description desc DigestAuth) tail) where
@@ -456,7 +469,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Descripti
     let
       digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
     in
-      [ digestAuth ]
+      mergeSecurityRequirements [ [ digestAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: DigestAuth wrapped in Example
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example ex DigestAuth) tail) where
@@ -464,7 +477,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Example e
     let
       digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
     in
-      [ digestAuth ]
+      mergeSecurityRequirements [ [ digestAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: DigestAuth wrapped in Deprecated
 else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecated DigestAuth) tail) where
@@ -472,7 +485,7 @@ else instance DetectSecurityRL tail => DetectSecurityRL (RL.Cons name (Deprecate
     let
       digestAuth = unsafeCoerce $ FObject.singleton "digestAuth" ([] :: Array String)
     in
-      [ digestAuth ]
+      mergeSecurityRequirements [ [ digestAuth ], detectSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: Non-security header, recurse
 else instance (DetectSecurityRL tail, HeaderValueType ty) => DetectSecurityRL (RL.Cons name ty tail) where
@@ -505,7 +518,7 @@ instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL 
       cookieName = reflectSymbol (Proxy :: Proxy name)
       apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
     in
-      [ apiKeyCookie ]
+      mergeSecurityRequirements [ [ apiKeyCookie ], detectCookieSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: ApiKeyCookie wrapped in Description
 else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL (RL.Cons name (Description desc ApiKeyCookie) tail) where
@@ -514,7 +527,7 @@ else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecuri
       cookieName = reflectSymbol (Proxy :: Proxy name)
       apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
     in
-      [ apiKeyCookie ]
+      mergeSecurityRequirements [ [ apiKeyCookie ], detectCookieSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: ApiKeyCookie wrapped in Example
 else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL (RL.Cons name (Example ex ApiKeyCookie) tail) where
@@ -523,7 +536,7 @@ else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecuri
       cookieName = reflectSymbol (Proxy :: Proxy name)
       apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
     in
-      [ apiKeyCookie ]
+      mergeSecurityRequirements [ [ apiKeyCookie ], detectCookieSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: ApiKeyCookie wrapped in Deprecated
 else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecurityRL (RL.Cons name (Deprecated ApiKeyCookie) tail) where
@@ -532,7 +545,7 @@ else instance (DetectCookieSecurityRL tail, IsSymbol name) => DetectCookieSecuri
       cookieName = reflectSymbol (Proxy :: Proxy name)
       apiKeyCookie = unsafeCoerce $ FObject.singleton (cookieName <> "Cookie") ([] :: Array String)
     in
-      [ apiKeyCookie ]
+      mergeSecurityRequirements [ [ apiKeyCookie ], detectCookieSecurityRL (Proxy :: Proxy tail) ]
 
 -- Case: Non-security cookie, recurse
 else instance (DetectCookieSecurityRL tail, HeaderValueType ty) => DetectCookieSecurityRL (RL.Cons name ty tail) where
@@ -929,6 +942,10 @@ instance RenderJSONSchema a => RenderJSONSchema (XML a) where
 instance RenderJSONSchema a => RenderJSONSchema (CustomContentType mime a) where
   renderJSONSchema _ = renderJSONSchema (Proxy :: Proxy a)
 
+-- Streaming responses are represented as binary payloads in OpenAPI.
+instance RenderJSONSchema (Streaming a) where
+  renderJSONSchema _ = unsafeCoerce { type: "string", format: "binary" }
+
 -- NoBody encoding (no schema)
 instance RenderJSONSchema NoBody where
   renderJSONSchema _ = unsafeCoerce { type: "null" }
@@ -1113,6 +1130,9 @@ instance GetContentType (XML a) where
 
 instance IsSymbol mime => GetContentType (CustomContentType mime a) where
   getContentType _ = reflectSymbol (Proxy :: Proxy mime)
+
+instance GetContentType (Streaming a) where
+  getContentType _ = "application/octet-stream"
 
 -- For unwrapped types (backward compatibility), default to JSON
 instance GetContentType String where
@@ -1576,6 +1596,9 @@ instance CollectSchemas a => CollectSchemas (MultipartFormData a) where
 instance CollectSchemas (PlainText) where
   collectSchemas _ = FObject.empty
 
+instance CollectSchemas (Streaming a) where
+  collectSchemas _ = FObject.empty
+
 -- XML wrapper: unwrap and recurse
 instance CollectSchemas a => CollectSchemas (XML a) where
   collectSchemas _ = collectSchemas (Proxy :: Proxy a)
@@ -1730,6 +1753,7 @@ instance CollectSchemaNames a names => CollectSchemaNames (JSON a) names
 instance CollectSchemaNames a names => CollectSchemaNames (FormData a) names
 instance CollectSchemaNames a names => CollectSchemaNames (MultipartFormData a) names
 instance CollectSchemaNames (PlainText) ()
+instance CollectSchemaNames (Streaming a) ()
 instance CollectSchemaNames a names => CollectSchemaNames (XML a) names
 instance CollectSchemaNames a names => CollectSchemaNames (CustomContentType mime a) names
 instance CollectSchemaNames NoBody ()

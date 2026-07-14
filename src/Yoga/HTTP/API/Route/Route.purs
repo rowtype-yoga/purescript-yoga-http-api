@@ -14,7 +14,7 @@ import Prim.RowList as RL
 import Type.Proxy (Proxy(..))
 import Yoga.HTTP.API.Path (class PathPattern, pathPattern)
 import Yoga.HTTP.API.Route.Handler (Request, class DefaultRequestFields, class SegmentPathParams, class SegmentQueryParams)
-import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderCookieParamsSchema, renderCookieParamsSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class DetectCookieSecurity, detectCookieSecurity, class ToOpenAPI, toOpenAPIImpl, class CollectSchemas, collectSchemas, class CollectVariantSchemasRL, collectVariantSchemasRL, class CollectRouteSchemas, collectRouteSchemas, class CollectSchemaNames, class CollectVariantSchemaNames, class CollectRouteSchemaNames)
+import Yoga.HTTP.API.Route.OpenAPI (class CollectOperations, class RenderHeadersSchema, renderHeadersSchema, class RenderCookieParamsSchema, renderCookieParamsSchema, class RenderPathParamsSchema, renderPathParamsSchema, class RenderQueryParamsSchema, renderQueryParamsSchema, class RenderRequestBodySchema, renderRequestBodySchema, class RenderVariantResponseSchemaRL, renderVariantResponseSchemaRL, class DetectSecurity, detectSecurity, class DetectCookieSecurity, detectCookieSecurity, mergeSecurityRequirements, class ToOpenAPI, toOpenAPIImpl, class CollectSchemas, collectSchemas, class CollectVariantSchemasRL, collectVariantSchemasRL, class CollectRouteSchemas, collectRouteSchemas, class CollectSchemaNames, class CollectVariantSchemaNames, class CollectRouteSchemaNames)
 import Yoga.HTTP.API.Route.OpenAPIMetadata (class HasOperationMetadata, operationMetadata)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.HTTP.API.Route.Response (Response, class ToResponse)
@@ -82,7 +82,7 @@ instance
       responses = renderVariantResponseSchemaRL (Proxy :: Proxy rl)
       headerSecurity = detectSecurity (Proxy :: Proxy reqHeaders)
       cookieSecurity = detectCookieSecurity (Proxy :: Proxy reqCookies)
-      security = headerSecurity <> cookieSecurity
+      security = mergeSecurityRequirements [ headerSecurity, cookieSecurity ]
       metadata = operationMetadata proxy
       operation =
         { method: methodStr

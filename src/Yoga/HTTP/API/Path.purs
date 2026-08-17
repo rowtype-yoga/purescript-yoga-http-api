@@ -30,6 +30,7 @@ import Data.Int as Int
 import Data.Maybe (Maybe(..))
 import Data.Number as Number
 import Data.String (Pattern(..), split)
+import Data.String as String
 import Data.Symbol (class IsSymbol, reflectSymbol)
 import Prim.Row as Row
 import Record as Record
@@ -240,6 +241,12 @@ instance parseParamNumber :: ParseParam Number where
   parseParam s = case Number.fromString s of
     Nothing -> Left $ "Expected a number but got: " <> s
     Just n -> Right n
+
+instance parseParamBoolean :: ParseParam Boolean where
+  parseParam s = case String.toLower s of
+    "true" -> Right true
+    "false" -> Right false
+    _ -> Left $ "Expected a boolean but got: " <> s
 
 
 -- | Parse a URL string into a record of typed path parameters

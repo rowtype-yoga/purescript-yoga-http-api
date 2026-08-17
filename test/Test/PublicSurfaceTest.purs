@@ -98,6 +98,9 @@ testMethodsAndPaths = describe "public methods and paths" do
     expectEqual (Left "Expected an integer but got: 4.2") (parseParam "4.2" :: Either String Int)
     expectEqual (Right 4.2) (parseParam "4.2" :: Either String Number)
     expectEqual (Left "Expected a number but got: nope") (parseParam "nope" :: Either String Number)
+    expectEqual (Right true) (parseParam "true" :: Either String Boolean)
+    expectEqual (Right false) (parseParam "FALSE" :: Either String Boolean)
+    expectEqual (Left "Expected a boolean but got: yes") (parseParam "yes" :: Either String Boolean)
 
   test "parses exact paths into correctly named captures" do
     expectEqual (Just {}) (parsePath (Proxy :: Proxy (Path Root)) "/")
